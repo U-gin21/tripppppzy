@@ -294,8 +294,13 @@ export default function ProviderDashboard({ currentUser, onProfileUpdate }) {
               <div className="row g-4">
                 {listings.map(srv => (
                   <div className="col-md-6 col-lg-4" key={srv.id}>
-                    <div className="card glass-card h-100 border-0 p-4 d-flex flex-column justify-content-between">
-                      <div>
+                    <div className="card glass-card h-100 border-0 overflow-hidden d-flex flex-column justify-content-between">
+                      <img 
+                        src={getUploadUrl(srv.photo) || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=600&q=80'} 
+                        alt={srv.name_of_institute} 
+                        style={{ height: '200px', objectFit: 'cover', width: '100%' }}
+                      />
+                      <div className="p-4">
                         <div className="d-flex justify-content-between mb-2">
                           <span className="badge bg-secondary bg-opacity-10 text-dark text-capitalize">{srv.service_type}</span>
                           <span className={`badge ${srv.status === 'enabled' ? 'bg-success' : 'bg-danger'} text-white`}>
@@ -311,7 +316,7 @@ export default function ProviderDashboard({ currentUser, onProfileUpdate }) {
                         </div>
                       </div>
 
-                      <div className="pt-3 border-top d-flex gap-2">
+                      <div className="px-4 pb-4 pt-3 border-top mt-auto d-flex gap-2">
                         <button className="btn btn-outline-primary btn-sm flex-fill" onClick={() => handleEditInit(srv)}>
                           <i className="bi bi-pencil-square"></i> Edit
                         </button>

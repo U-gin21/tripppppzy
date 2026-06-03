@@ -358,7 +358,7 @@ export default function TouristDashboard({ currentUser, onProfileUpdate, initial
                   <div className="col-md-6 col-lg-4" key={srv.id}>
                     <div className="card glass-card h-100 border-0 overflow-hidden">
                       <img 
-                        src={`https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=600&q=80`} 
+                        src={getUploadUrl(srv.photo) || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=600&q=80'} 
                         alt={srv.name_of_institute} 
                         style={{ height: '180px', objectFit: 'cover' }}
                       />
