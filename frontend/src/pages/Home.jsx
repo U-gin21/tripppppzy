@@ -1,5 +1,3 @@
-import React from 'react';
-
 export default function Home({ onNavigate, currentUser }) {
   const testimonials = [
     { name: "Sarah Miller", text: "The hotel booking and companion system was incredibly easy to use. Highly recommended for solo travelers!", location: "United Kingdom" },
@@ -11,10 +9,16 @@ export default function Home({ onNavigate, currentUser }) {
     { title: "Hotel Reservation", icon: "bi-building", desc: "Find comfortable, luxury, or budget-friendly resorts and hotels across the country.", serviceType: 'hotel' },
     { title: "Vehicle Hiring", icon: "bi-car-front-fill", desc: "Rent cars, motorbikes, or tour vans with verified drivers for secure transportation.", serviceType: 'vehicle' },
     { title: "Tour Guide Booking", icon: "bi-compass-fill", desc: "Hire certified multilingual tour guides to explain the heritage sites.", serviceType: 'guide' },
-    { title: "Camping Tools Rental", icon: "bi-backpack-fill", desc: "Rent high-quality tents, sleeping bags, and camping tools for wilderness treks.", serviceType: 'camping_tool' }
+    { title: "Camping Tools Rental", icon: "bi-backpack-fill", desc: "Rent high-quality tents, sleeping bags, and camping tools for wilderness treks.", serviceType: 'camping_tool' },
+    { title: "Travel Companion Finder", icon: "bi-people", desc: "Create posts and join other tourists for shared trips, expenses, and local adventure.", serviceType: 'companions' }
   ];
 
   const handleServiceClick = (service) => {
+    if (service.serviceType === 'companions') {
+      onNavigate('companions');
+      return;
+    }
+
     if (currentUser && currentUser.user_type === 'tourist') {
       onNavigate('dashboard', { initialTab: 'services', serviceType: service.serviceType });
       return;

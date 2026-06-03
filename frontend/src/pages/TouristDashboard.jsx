@@ -7,8 +7,10 @@ export default function TouristDashboard({ currentUser, onProfileUpdate, initial
   // Data states
   const [bookings, setBookings] = useState([]);
   const [services, setServices] = useState([]);
+  const [companionPosts, setCompanionPosts] = useState([]);
   const [myPosts, setMyPosts] = useState([]);
   const [myRequests, setMyRequests] = useState([]);
+  const [incomingRequests, setIncomingRequests] = useState([]);
   const [notifications, setNotifications] = useState([]);
   
   // Profile update form state
@@ -29,6 +31,20 @@ export default function TouristDashboard({ currentUser, onProfileUpdate, initial
   const [reviewServiceId, setReviewServiceId] = useState(null);
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
+
+  // Companion Post Form State
+  const [postDest, setPostDest] = useState('');
+  const [postStartDate, setPostStartDate] = useState('');
+  const [postEndDate, setPostEndDate] = useState('');
+  const [postBudget, setPostBudget] = useState('');
+  const [postCompanionsNeeded, setPostCompanionsNeeded] = useState(1);
+  const [postGenderPref, setPostGenderPref] = useState('Any');
+  const [postInterests, setPostInterests] = useState('');
+  const [postDesc, setPostDesc] = useState('');
+  const [postSubmitting, setPostSubmitting] = useState(false);
+  const [requestPost, setRequestPost] = useState(null);
+  const [requestMsg, setRequestMsg] = useState('');
+  const [requestSubmitting, setRequestSubmitting] = useState(false);
 
   // Search service filter
   const [serviceTypeFilter, setServiceTypeFilter] = useState(initialServiceType || 'hotel');
@@ -78,12 +94,42 @@ export default function TouristDashboard({ currentUser, onProfileUpdate, initial
 
   const fetchCompanionDetails = async () => {
     try {
+      const sharedPostsRes = await apiRequest('companions', 'list_posts', 'GET');
+      setCompanionPosts(sharedPostsRes.posts || []);
       const postRes = await apiRequest('companions', 'my_posts');
       setMyPosts(postRes.posts || []);
       const reqRes = await apiRequest('companions', 'my_requests');
       setMyRequests(reqRes.requests || []);
+      const incomingRes = await apiRequest('companions', 'incoming_requests');
+      setIncomingRequests(incomingRes.requests || []);
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const handleSendCompanionRequest = async (e) => {
+    e.preventDefault();
+    if (!requestPost) {
+      return;
+    }
+    setRequestSubmitting(true);
+    try {
+      await apiRequest('companions', 'send_request', 'POST', {
+        post_id: requestPost.id,
+        message: requestMsg
+      });
+      alert('Join request sent successfully! The host will be notified.');
+      setRequestMsg('');
+      setRequestPost(null);
+      fetchCompanionDetails();
+
+      const modalElement = document.getElementById('requestJoinModal');
+      const modal = window.bootstrap.Modal.getInstance(modalElement);
+      if (modal) modal.hide();
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setRequestSubmitting(false);
     }
   };
 
@@ -203,6 +249,100 @@ export default function TouristDashboard({ currentUser, onProfileUpdate, initial
       const modalElement = document.getElementById('addReviewModal');
       const modal = window.bootstrap.Modal.getInstance(modalElement);
       if (modal) modal.hide();
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const handleCreateCompanionPost = async (e) => {
+    e.preventDefault();
+    setPostSubmitting(true);
+    try {
+      await apiRequest('companions', 'create_post', 'POST', {
+        destination_place: postDest,
+        start_date: postStartDate,
+        end_date: postEndDate,
+        budget_range: postBudget,
+        companions_needed: postCompanionsNeeded,
+        gender_preference: postGenderPref,
+        travel_interests: postInterests,
+        description: postDesc
+      });
+      alert('Companion post created successfully.');
+      setPostDest('');
+      setPostStartDate('');
+      setPostEndDate('');
+      setPostBudget('');
+      setPostCompanionsNeeded(1);
+      setPostGenderPref('Any');
+      setPostInterests('');
+      setPostDesc('');
+      fetchCompanionDetails();
+
+      const modalElement = document.getElementById('createCompanionPostModal');
+      const modal = window.bootstrap.Modal.getInstance(modalElement);
+      if (modal) modal.hide();
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setPostSubmitting(false);
+    }
+  };
+
+  const handleApproveRequest = async (requestId) => {
+    try {
+      await apiRequest('companions', 'update_request', 'POST', {
+        request_id: requestId,
+        status: 'accepted'
+      });
+      alert("Request accepted! Contact details have been shared via email.");
+      fetchCompanionDetails();
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const handleRejectRequest = async (requestId) => {
+    try {
+      await apiRequest('companions', 'update_request', 'POST', {
+        request_id: requestId,
+        status: 'rejected'
+      });
+      alert("Request rejected.");
+      fetchCompanionDetails();
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const handleDeletePost = async (postId) => {
+    if (!window.confirm("Are you sure you want to delete this companion post? This action cannot be undone.")) return;
+    try {
+      await apiRequest('companions', 'delete_post', 'POST', { post_id: postId });
+      alert("Companion post deleted successfully.");
+      fetchCompanionDetails();
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const handleClosePost = async (postId) => {
+    if (!window.confirm("Close this companion search? You will no longer accept new requests.")) return;
+    try {
+      await apiRequest('companions', 'close_post', 'POST', { post_id: postId });
+      alert("Companion post closed. No more join requests accepted.");
+      fetchCompanionDetails();
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const handleCancelRequest = async (requestId) => {
+    if (!window.confirm("Cancel this join request? You can send another request later.")) return;
+    try {
+      await apiRequest('companions', 'cancel_request', 'POST', { request_id: requestId });
+      alert("Join request cancelled.");
+      fetchCompanionDetails();
     } catch (err) {
       alert(err.message);
     }
@@ -409,64 +549,228 @@ export default function TouristDashboard({ currentUser, onProfileUpdate, initial
         {/* TAB: COMPANIONS */}
         {activeTab === 'companion' && (
           <div>
-            <h2 className="fw-bold text-gradient mb-4">Travel Companion Management</h2>
+            <div className="d-flex justify-content-between align-items-center mb-4">
+              <div>
+                <h2 className="fw-bold text-gradient mb-1">Travel Companion Management</h2>
+                <p className="text-muted small mb-0">Create posts, manage requests and share travel plans with other tourists.</p>
+              </div>
+              <button
+                className="btn btn-gradient btn-sm rounded-pill"
+                data-bs-toggle="modal"
+                data-bs-target="#createCompanionPostModal"
+              >
+                <i className="bi bi-plus-circle-fill me-1"></i> Create Post
+              </button>
+            </div>
+
+            <div className="card glass-card border-0 p-4 mb-4">
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                  <h5 className="fw-bold mb-1">Open Companion Posts</h5>
+                  <p className="text-muted small mb-0">Browse all currently open travel plans from other tourists.</p>
+                </div>
+                <button className="btn btn-sm btn-outline-gradient" onClick={fetchCompanionDetails}>
+                  Refresh Feed
+                </button>
+              </div>
+              {companionPosts.length > 0 ? (
+                <div className="row g-3">
+                  {companionPosts.map((post) => (
+                    <div className="col-md-6 col-lg-4" key={post.id}>
+                      <div className="card glass-card border-0 p-3 h-100">
+                        <h6 className="fw-bold mb-2">{post.destination_place}</h6>
+                        <p className="text-muted small mb-2">{post.start_date} to {post.end_date}</p>
+                        <p className="text-muted small mb-2">Need: {post.companions_needed} companion{post.companions_needed !== 1 ? 's' : ''}</p>
+                        <p className="text-muted small mb-2">{post.travel_interests}</p>
+                        <p className="small text-secondary text-truncate">{post.description}</p>
+                        <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-3">
+                          <span className="badge bg-success bg-opacity-10 text-success small">{post.gender_preference}</span>
+                          {currentUser && currentUser.id !== post.owner_id ? (
+                            <button
+                              className="btn btn-gradient btn-sm rounded-pill px-3"
+                              data-bs-toggle="modal"
+                              data-bs-target="#requestJoinModal"
+                              onClick={() => {
+                                setRequestPost(post);
+                                setRequestMsg('');
+                              }}
+                            >
+                              Request Join
+                            </button>
+                          ) : (
+                            <span className="badge bg-info bg-opacity-10 text-info small">Your Post</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-4">
+                  <p className="text-muted mb-0">No open companion posts are available right now.</p>
+                </div>
+              )}
+            </div>
+
             <div className="row g-4">
               
-              {/* My Companion Posts */}
-              <div className="col-md-6">
+              {/* Column 1: My Companion Posts */}
+              <div className="col-lg-4">
                 <div className="card glass-card border-0 p-4 h-100">
-                  <h4 className="fw-bold mb-3 text-primary"><i className="bi bi-postcard-fill me-2"></i> My Travel Posts</h4>
+                  <h5 className="fw-bold mb-3 text-primary"><i className="bi bi-postcard-fill me-2"></i> My Travel Posts</h5>
                   {myPosts.length > 0 ? (
                     <div className="list-group list-group-flush">
-                      {myPosts.map(post => (
-                        <div className="list-group-item bg-transparent px-0 py-3" key={post.id}>
-                          <div className="d-flex justify-content-between align-items-start">
-                            <div>
-                              <h6 className="fw-bold mb-1">{post.destination_place}</h6>
-                              <span className="text-muted small"><i className="bi bi-calendar"></i> {post.start_date} to {post.end_date}</span>
+                      {myPosts.map(post => {
+                        const incomingCount = incomingRequests.filter(r => r.post_id === post.id && r.status === 'pending').length;
+                        return (
+                          <div className="list-group-item bg-transparent px-0 py-3 border-bottom" key={post.id}>
+                            <div className="d-flex justify-content-between align-items-start mb-2">
+                              <div className="flex-grow-1">
+                                <h6 className="fw-bold mb-1">{post.destination_place}</h6>
+                                <span className="text-muted small d-block"><i className="bi bi-calendar"></i> {post.start_date} to {post.end_date}</span>
+                              </div>
+                              <span className={`badge bg-${post.status === 'open' ? 'success' : 'danger'} rounded-pill small`}>
+                                {post.status.toUpperCase()}
+                              </span>
                             </div>
-                            <span className={`badge bg-${post.status === 'open' ? 'success' : 'secondary'} rounded-pill`}>
-                              {post.status.toUpperCase()}
-                            </span>
+                            {incomingCount > 0 && (
+                              <span className="badge bg-info rounded-pill small mb-2">
+                                {incomingCount} new request{incomingCount !== 1 ? 's' : ''}
+                              </span>
+                            )}
+                            <div className="d-flex gap-2 pt-2">
+                              {post.status === 'open' && (
+                                <>
+                                  <button 
+                                    className="btn btn-warning btn-sm btn-sm rounded-2 flex-grow-1"
+                                    onClick={() => handleClosePost(post.id)}
+                                    title="Close this post when you've found enough companions"
+                                  >
+                                    Close
+                                  </button>
+                                  <button 
+                                    className="btn btn-danger btn-sm rounded-2"
+                                    onClick={() => handleDeletePost(post.id)}
+                                  >
+                                    <i className="bi bi-trash"></i>
+                                  </button>
+                                </>
+                              )}
+                              {post.status === 'closed' && (
+                                <button 
+                                  className="btn btn-danger btn-sm w-100 rounded-2"
+                                  onClick={() => handleDeletePost(post.id)}
+                                >
+                                  Delete
+                                </button>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   ) : (
-                    <p className="text-muted small text-center py-4">You haven't posted any companion search plans yet.</p>
+                    <p className="text-muted small text-center py-4">No companion search posts yet.</p>
                   )}
                 </div>
               </div>
 
-              {/* My Join Requests Status */}
-              <div className="col-md-6">
+              {/* Column 2: Incoming Requests (NEW!) */}
+              <div className="col-lg-4">
                 <div className="card glass-card border-0 p-4 h-100">
-                  <h4 className="fw-bold mb-3 text-success"><i className="bi bi-person-fill-add me-2"></i> Sent Join Requests</h4>
+                  <h5 className="fw-bold mb-3 text-warning"><i className="bi bi-inbox-fill me-2"></i> Incoming Requests</h5>
+                  {incomingRequests.length > 0 ? (
+                    <div className="list-group list-group-flush">
+                      {incomingRequests.map(req => {
+                        const age = req.date_of_birth ? new Date().getFullYear() - new Date(req.date_of_birth).getFullYear() : '?';
+                        return (
+                          <div className="list-group-item bg-transparent px-0 py-3 border-bottom" key={req.id}>
+                            <div className="mb-2">
+                              <div className="d-flex gap-2 align-items-start mb-2">
+                                <img 
+                                  src={`https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80`} 
+                                  alt={req.requester_name} 
+                                  className="rounded-circle" 
+                                  style={{ width: '32px', height: '32px', objectFit: 'cover' }}
+                                />
+                                <div className="flex-grow-1">
+                                  <h6 className="fw-bold mb-0 small">{req.requester_name}</h6>
+                                  <span className="text-muted text-capitalize" style={{ fontSize: '11px' }}>
+                                    {req.requester_gender}, {age} yrs • {req.destination_place}
+                                  </span>
+                                </div>
+                              </div>
+                              <p className="text-muted small mb-2 italic" style={{ fontSize: '12px' }}>"{req.message}"</p>
+                              <span className={`badge badge-${req.status} small`}>
+                                {req.status.toUpperCase()}
+                              </span>
+                            </div>
+                            {req.status === 'pending' && (
+                              <div className="d-flex gap-2 pt-2">
+                                <button 
+                                  className="btn btn-success btn-sm flex-grow-1 rounded-2"
+                                  onClick={() => handleApproveRequest(req.id)}
+                                >
+                                  Approve
+                                </button>
+                                <button 
+                                  className="btn btn-outline-danger btn-sm flex-grow-1 rounded-2"
+                                  onClick={() => handleRejectRequest(req.id)}
+                                >
+                                  Reject
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <p className="text-muted small text-center py-4">No incoming requests yet.</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Column 3: Sent Join Requests */}
+              <div className="col-lg-4">
+                <div className="card glass-card border-0 p-4 h-100">
+                  <h5 className="fw-bold mb-3 text-success"><i className="bi bi-person-fill-add me-2"></i> Sent Requests</h5>
                   {myRequests.length > 0 ? (
                     <div className="list-group list-group-flush">
                       {myRequests.map(req => (
-                        <div className="list-group-item bg-transparent px-0 py-3" key={req.id}>
-                          <div className="d-flex justify-content-between align-items-start">
+                        <div className="list-group-item bg-transparent px-0 py-3 border-bottom" key={req.id}>
+                          <div className="d-flex justify-content-between align-items-start mb-2">
                             <div>
-                              <h6 className="fw-bold mb-1">To: {req.owner_name} ({req.destination_place})</h6>
-                              <p className="text-muted small mb-0 italic">Message: "{req.message}"</p>
-                              {req.status === 'accepted' && (
-                                <div className="bg-success bg-opacity-10 text-success p-2 rounded mt-2 small">
-                                  <strong>Contact Info Unlocked:</strong><br />
-                                  Phone: {req.owner_contact} <br />
-                                  Email: {req.owner_email}
-                                </div>
-                              )}
+                              <h6 className="fw-bold mb-1 small">To: {req.owner_name}</h6>
+                              <span className="text-muted small d-block">{req.destination_place}</span>
+                              <span className="text-muted small d-block" style={{ fontSize: '11px' }}>
+                                {req.start_date} to {req.end_date}
+                              </span>
                             </div>
-                            <span className={`badge-${req.status}`}>
+                            <span className={`badge badge-${req.status} small`}>
                               {req.status.toUpperCase()}
                             </span>
                           </div>
+                          {req.status === 'accepted' && (
+                            <div className="bg-success bg-opacity-10 text-success p-2 rounded mb-2 small">
+                              <strong>Contact Info Shared:</strong><br />
+                              <i className="bi bi-telephone"></i> {req.owner_contact} <br />
+                              <i className="bi bi-envelope"></i> {req.owner_email}
+                            </div>
+                          )}
+                          {req.status === 'pending' && (
+                            <button 
+                              className="btn btn-outline-danger btn-sm w-100 rounded-2"
+                              onClick={() => handleCancelRequest(req.id)}
+                            >
+                              Cancel Request
+                            </button>
+                          )}
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-muted small text-center py-4">You haven't requested to join other companion plans yet.</p>
+                    <p className="text-muted small text-center py-4">No sent requests yet.</p>
                   )}
                 </div>
               </div>
@@ -666,6 +970,164 @@ export default function TouristDashboard({ currentUser, onProfileUpdate, initial
               <div className="modal-footer border-0 pt-0">
                 <button type="button" className="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Close</button>
                 <button type="submit" className="btn btn-gradient rounded-pill px-4">Submit Feedback</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      {/* COMPANION CREATE POST MODAL */}
+      <div className="modal fade" id="createCompanionPostModal" tabIndex="-1" aria-hidden="true">
+        <div className="modal-dialog modal-dialog-centered">
+          <div className="modal-content rounded-4 border-0">
+            <div className="modal-header border-0 pb-0">
+              <h4 className="modal-title fw-bold text-gradient">Create Companion Post</h4>
+              <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form onSubmit={handleCreateCompanionPost}>
+              <div className="modal-body p-4">
+                <div className="mb-3">
+                  <label className="form-label small fw-bold">Destination / Place</label>
+                  <input
+                    type="text"
+                    className="form-control rounded-3"
+                    value={postDest}
+                    onChange={(e) => setPostDest(e.target.value)}
+                    required
+                    placeholder="e.g. Nuwara Eliya, Galle, Kandy"
+                  />
+                </div>
+                <div className="row g-3 mb-3">
+                  <div className="col-6">
+                    <label className="form-label small fw-bold">Start Date</label>
+                    <input
+                      type="date"
+                      className="form-control rounded-3"
+                      value={postStartDate}
+                      onChange={(e) => setPostStartDate(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="col-6">
+                    <label className="form-label small fw-bold">End Date</label>
+                    <input
+                      type="date"
+                      className="form-control rounded-3"
+                      value={postEndDate}
+                      onChange={(e) => setPostEndDate(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="mb-3 row g-3">
+                  <div className="col-6">
+                    <label className="form-label small fw-bold">Budget Range</label>
+                    <input
+                      type="text"
+                      className="form-control rounded-3"
+                      value={postBudget}
+                      onChange={(e) => setPostBudget(e.target.value)}
+                      placeholder="e.g. 15,000 - 25,000"
+                    />
+                  </div>
+                  <div className="col-6">
+                    <label className="form-label small fw-bold">Companions Needed</label>
+                    <input
+                      type="number"
+                      min="1"
+                      className="form-control rounded-3"
+                      value={postCompanionsNeeded}
+                      onChange={(e) => setPostCompanionsNeeded(Number(e.target.value))}
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="mb-3 row g-3">
+                  <div className="col-6">
+                    <label className="form-label small fw-bold">Gender Preference</label>
+                    <select
+                      className="form-select rounded-3"
+                      value={postGenderPref}
+                      onChange={(e) => setPostGenderPref(e.target.value)}
+                    >
+                      <option>Any</option>
+                      <option>Male</option>
+                      <option>Female</option>
+                    </select>
+                  </div>
+                  <div className="col-6">
+                    <label className="form-label small fw-bold">Travel Interests</label>
+                    <input
+                      type="text"
+                      className="form-control rounded-3"
+                      value={postInterests}
+                      onChange={(e) => setPostInterests(e.target.value)}
+                      placeholder="e.g. hiking, culture, food"
+                    />
+                  </div>
+                </div>
+                <div className="mb-3">
+                  <label className="form-label small fw-bold">Additional Details</label>
+                  <textarea
+                    className="form-control rounded-3"
+                    rows="4"
+                    value={postDesc}
+                    onChange={(e) => setPostDesc(e.target.value)}
+                    placeholder="Describe your travel plan, preferred activities, and what kind of companion you are looking for..."
+                  />
+                </div>
+              </div>
+              <div className="modal-footer border-0 pt-0">
+                <button type="button" className="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" className="btn btn-gradient rounded-pill px-4" disabled={postSubmitting}>
+                  {postSubmitting ? 'Posting...' : 'Create Post'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      {/* COMPANION REQUEST JOIN MODAL */}
+      <div className="modal fade" id="requestJoinModal" tabIndex="-1" aria-hidden="true">
+        <div className="modal-dialog modal-dialog-centered">
+          <div className="modal-content rounded-4 border-0">
+            <div className="modal-header border-0 pb-0">
+              <h4 className="modal-title fw-bold text-gradient">Request to Join Trip</h4>
+              <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form onSubmit={handleSendCompanionRequest}>
+              <div className="modal-body p-4">
+                {requestPost ? (
+                  <>
+                    <div className="mb-3">
+                      <span className="small text-muted d-block">Trip destination</span>
+                      <strong>{requestPost.destination_place}</strong>
+                    </div>
+                    <div className="mb-3">
+                      <span className="small text-muted d-block">Host</span>
+                      <strong>{requestPost.full_name}</strong>
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label small fw-bold">Message to Host</label>
+                      <textarea
+                        className="form-control rounded-3"
+                        rows="4"
+                        value={requestMsg}
+                        onChange={(e) => setRequestMsg(e.target.value)}
+                        placeholder="Tell them why you want to join or what kind of travel companion you are..."
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-muted small">Select a trip to request to join.</p>
+                )}
+              </div>
+              <div className="modal-footer border-0 pt-0">
+                <button type="button" className="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" className="btn btn-gradient rounded-pill px-4" disabled={requestSubmitting || !requestPost}>
+                  {requestSubmitting ? 'Sending...' : 'Send Request'}
+                </button>
               </div>
             </form>
           </div>

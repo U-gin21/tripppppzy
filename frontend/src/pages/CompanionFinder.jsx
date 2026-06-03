@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { apiRequest } from '../api';
 
 export default function CompanionFinder({ currentUser }) {
@@ -25,11 +25,14 @@ export default function CompanionFinder({ currentUser }) {
   const [selectedPost, setSelectedPost] = useState(null);
   const [requestMsg, setRequestMsg] = useState('');
 
-  useEffect(() => {
-    fetchPosts();
-  }, [filterDest, filterGender]);
+  // Requests
+  const [incomingRequests, setIncomingRequests] = useState([]);
+  const [sentRequests, setSentRequests] = useState([]);
+  const [myPosts, setMyPosts] = useState([]);
+  const [loadingRequests, setLoadingRequests] = useState(false);
 
-  const fetchPosts = async () => {
+  const fetchPosts = useCallback(async () => {
+    setLoading(true);
     try {
       const res = await apiRequest('companions', 'list_posts', 'GET', {
         destination: filterDest,
@@ -41,7 +44,66 @@ export default function CompanionFinder({ currentUser }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filterDest, filterGender]);
+
+  const fetchIncomingRequests = useCallback(async () => {
+    setLoadingRequests(true);
+    try {
+      const res = await apiRequest('companions', 'incoming_requests', 'GET');
+      setIncomingRequests(res.requests || []);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingRequests(false);
+    }
+  }, []);
+
+  const fetchSentRequests = useCallback(async () => {
+    try {
+      const res = await apiRequest('companions', 'my_requests', 'GET');
+      setSentRequests(res.requests || []);
+    } catch (err) {
+      console.error(err);
+    }
+  }, []);
+
+  const fetchMyPosts = useCallback(async () => {
+    try {
+      const res = await apiRequest('companions', 'my_posts', 'GET');
+      setMyPosts(res.posts || []);
+    } catch (err) {
+      console.error(err);
+    }
+  }, []);
+
+  const refreshData = useCallback(() => {
+    fetchPosts();
+    if (currentUser) {
+      fetchIncomingRequests();
+      fetchSentRequests();
+      fetchMyPosts();
+    }
+  }, [currentUser, fetchPosts, fetchIncomingRequests, fetchSentRequests, fetchMyPosts]);
+
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    fetchPosts();
+  }, [fetchPosts]);
+  /* eslint-enable react-hooks/set-state-in-effect */
+
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    if (currentUser) {
+      fetchIncomingRequests();
+      fetchSentRequests();
+      fetchMyPosts();
+    } else {
+      setIncomingRequests([]);
+      setSentRequests([]);
+      setMyPosts([]);
+    }
+  }, [currentUser, fetchIncomingRequests, fetchSentRequests, fetchMyPosts]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const handleCreatePost = async (e) => {
     e.preventDefault();
@@ -74,9 +136,8 @@ export default function CompanionFinder({ currentUser }) {
       setInterests('');
       setDesc('');
 
-      fetchPosts();
+      refreshData();
       
-      // Close modal
       const modalElement = document.getElementById('createPostModal');
       const modal = window.bootstrap.Modal.getInstance(modalElement);
       if (modal) modal.hide();
@@ -90,7 +151,7 @@ export default function CompanionFinder({ currentUser }) {
   const handleSendRequest = async (e) => {
     e.preventDefault();
     if (!currentUser) {
-      alert("Please log in to join trips.");
+      alert('Please log in to join trips.');
       return;
     }
     try {
@@ -98,14 +159,28 @@ export default function CompanionFinder({ currentUser }) {
         post_id: selectedPost.id,
         message: requestMsg
       });
-      alert("Join request sent successfully! You will be notified via email once the host approves.");
+      alert('Join request sent successfully! You will be notified via email once the host approves.');
       setRequestMsg('');
+      refreshData();
       
       const modalElement = document.getElementById('requestJoinModal');
       const modal = window.bootstrap.Modal.getInstance(modalElement);
       if (modal) modal.hide();
     } catch (err) {
       alert(err.message);
+    }
+  };
+
+  const handleRequestAction = async (requestId, status) => {
+    try {
+      await apiRequest('companions', 'update_request', 'POST', {
+        request_id: requestId,
+        status
+      });
+      setMsg({ type: 'success', text: `Request ${status} successfully.` });
+      refreshData();
+    } catch (err) {
+      setMsg({ type: 'danger', text: err.message });
     }
   };
 
@@ -125,7 +200,7 @@ export default function CompanionFinder({ currentUser }) {
             <i className="bi bi-plus-circle-fill me-2"></i> Post Travel Plan
           </button>
         ) : (
-          <span className="text-muted small">Log in to post your travel plan</span>
+          <span className="text-muted small">Log in to post or join travel plans.</span>
         )}
       </div>
 
@@ -135,7 +210,6 @@ export default function CompanionFinder({ currentUser }) {
         </div>
       )}
 
-      {/* FILTER BAR */}
       <div className="card glass-card p-3 border-0 mb-4">
         <div className="row g-3 align-items-end">
           <div className="col-md-5">
@@ -165,7 +239,6 @@ export default function CompanionFinder({ currentUser }) {
         </div>
       </div>
 
-      {/* POSTINGS GRID */}
       {loading ? (
         <div className="text-center py-5">
           <div className="spinner-border text-primary" role="status">
@@ -242,7 +315,103 @@ export default function CompanionFinder({ currentUser }) {
         </div>
       )}
 
-      {/* CREATE COMPANION PLAN MODAL */}
+      {currentUser && (
+        <>
+          <div className="mt-5">
+            <div className="d-flex justify-content-between align-items-center mb-3">
+              <h3 className="mb-0">Incoming Requests</h3>
+              <button className="btn btn-sm btn-outline-gradient" onClick={fetchIncomingRequests}>Refresh</button>
+            </div>
+            {loadingRequests ? (
+              <div className="text-center py-4">
+                <div className="spinner-border text-secondary" role="status"></div>
+              </div>
+            ) : incomingRequests.length > 0 ? (
+              <div className="row g-3">
+                {incomingRequests.map((request) => (
+                  <div className="col-md-6" key={request.id}>
+                    <div className="card glass-card border-0 p-4">
+                      <div className="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                          <h5 className="fw-bold mb-1">{request.requester_name}</h5>
+                          <small className="text-muted">Requested for {request.destination_place}</small>
+                        </div>
+                        <span className={`badge rounded-pill px-3 py-2 ${request.status === 'pending' ? 'bg-warning text-dark' : request.status === 'accepted' ? 'bg-success' : 'bg-danger'}`}>
+                          {request.status}
+                        </span>
+                      </div>
+                      <p className="mb-2"><strong>Message:</strong> {request.message || 'No message provided.'}</p>
+                      <p className="mb-2"><strong>Requester Contact:</strong> {request.requester_email}, {request.requester_contact}</p>
+                      <div className="d-flex gap-2 flex-wrap mt-3">
+                        <button className="btn btn-sm btn-success rounded-pill" disabled={request.status !== 'pending'} onClick={() => handleRequestAction(request.id, 'accepted')}>
+                          Accept
+                        </button>
+                        <button className="btn btn-sm btn-outline-danger rounded-pill" disabled={request.status !== 'pending'} onClick={() => handleRequestAction(request.id, 'rejected')}>
+                          Reject
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="card glass-card border-0 p-4 text-center">
+                <p className="mb-0 text-muted">No incoming join requests yet. Share your trip post and invite others.</p>
+              </div>
+            )}
+          </div>
+
+          <div className="mt-5">
+            <h3 className="mb-3">Your Active Companion Posts</h3>
+            {myPosts.length > 0 ? (
+              <div className="row g-3">
+                {myPosts.map((post) => (
+                  <div className="col-md-6" key={post.id}>
+                    <div className="card glass-card border-0 p-4">
+                      <h5 className="fw-bold mb-1">{post.destination_place}</h5>
+                      <p className="mb-1 text-muted small">{post.start_date} – {post.end_date}</p>
+                      <p className="mb-1"><strong>Need:</strong> {post.companions_needed} companions</p>
+                      <p className="mb-1"><strong>Budget:</strong> LKR {post.budget_range}</p>
+                      <p className="mb-0 text-truncate">{post.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="card glass-card border-0 p-4 text-center">
+                <p className="mb-0 text-muted">You don't have any active companion posts yet.</p>
+              </div>
+            )}
+          </div>
+
+          <div className="mt-5">
+            <h3 className="mb-3">Requests You Sent</h3>
+            {sentRequests.length > 0 ? (
+              <div className="row g-3">
+                {sentRequests.map((request) => (
+                  <div className="col-md-6" key={request.id}>
+                    <div className="card glass-card border-0 p-4">
+                      <div className="d-flex justify-content-between align-items-center mb-2">
+                        <h5 className="fw-bold mb-0">{request.destination_place}</h5>
+                        <span className={`badge rounded-pill px-3 py-2 ${request.status === 'pending' ? 'bg-warning text-dark' : request.status === 'accepted' ? 'bg-success' : 'bg-danger'}`}>
+                          {request.status}
+                        </span>
+                      </div>
+                      <p className="mb-1 text-muted small">Host: {request.owner_name}</p>
+                      <p className="mb-0 text-truncate">{request.message || 'No message provided.'}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="card glass-card border-0 p-4 text-center">
+                <p className="mb-0 text-muted">You haven't sent any join requests yet.</p>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+
       <div className="modal fade" id="createPostModal" tabIndex="-1" aria-hidden="true">
         <div className="modal-dialog modal-dialog-centered">
           <div className="modal-content rounded-4 border-0">
@@ -356,7 +525,6 @@ export default function CompanionFinder({ currentUser }) {
         </div>
       </div>
 
-      {/* REQUEST JOIN MODAL */}
       <div className="modal fade" id="requestJoinModal" tabIndex="-1" aria-hidden="true">
         <div className="modal-dialog modal-dialog-centered">
           <div className="modal-content rounded-4 border-0">

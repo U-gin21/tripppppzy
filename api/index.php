@@ -500,7 +500,7 @@ try {
 
     // Controller: companions
     elseif ($controller === 'companions') {
-        if (!isset($_SESSION['user_id'])) {
+        if (!in_array($action, ['list_posts', 'get_post']) && !isset($_SESSION['user_id'])) {
             throw new Exception("Authorization required for companion finder.");
         }
         $compModel = new Companion();
@@ -549,6 +549,25 @@ try {
             
             $compModel->updateRequestStatus($requestId, $status);
             $response = ["success" => true, "message" => "Companion request updated."];
+        } elseif ($action === 'incoming_requests') {
+            $requests = $compModel->getIncomingRequests($_SESSION['user_id']);
+            $response = ["success" => true, "requests" => $requests];
+        } elseif ($action === 'edit_post') {
+            $postId = $input['post_id'] ?? 0;
+            $compModel->editPost($postId, $_SESSION['user_id'], $input);
+            $response = ["success" => true, "message" => "Companion post updated successfully."];
+        } elseif ($action === 'delete_post') {
+            $postId = $input['post_id'] ?? 0;
+            $compModel->deletePost($postId, $_SESSION['user_id']);
+            $response = ["success" => true, "message" => "Companion post deleted."];
+        } elseif ($action === 'close_post') {
+            $postId = $input['post_id'] ?? 0;
+            $compModel->closePost($postId, $_SESSION['user_id']);
+            $response = ["success" => true, "message" => "Companion post closed. No more join requests accepted."];
+        } elseif ($action === 'cancel_request') {
+            $requestId = $input['request_id'] ?? 0;
+            $compModel->cancelRequest($requestId, $_SESSION['user_id']);
+            $response = ["success" => true, "message" => "Join request cancelled."];
         } else {
             throw new Exception("Companion action '$action' not found.");
         }

@@ -169,4 +169,108 @@ class Companion {
 
         return $result;
     }
+
+    public function editPost($postId, $userId, $data) {
+        // Verify ownership
+        $stmt = $this->db->prepare("SELECT owner_id FROM companion_posts WHERE id = ?");
+        $stmt->execute([$postId]);
+        $post = $stmt->fetch();
+        if (!$post || $post['owner_id'] != $userId) {
+            throw new Exception("Access denied. You can only edit your own posts.");
+        }
+
+        $sql = "UPDATE companion_posts SET ";
+        $updates = [];
+        $params = [];
+
+        if (isset($data['destination_place'])) {
+            $updates[] = "destination_place = ?";
+            $params[] = $data['destination_place'];
+        }
+        if (isset($data['budget_range'])) {
+            $updates[] = "budget_range = ?";
+            $params[] = $data['budget_range'];
+        }
+        if (isset($data['companions_needed'])) {
+            $updates[] = "companions_needed = ?";
+            $params[] = $data['companions_needed'];
+        }
+        if (isset($data['description'])) {
+            $updates[] = "description = ?";
+            $params[] = $data['description'];
+        }
+        if (isset($data['travel_interests'])) {
+            $updates[] = "travel_interests = ?";
+            $params[] = $data['travel_interests'];
+        }
+
+        if (empty($updates)) {
+            return true;
+        }
+
+        $sql .= implode(", ", $updates) . " WHERE id = ?";
+        $params[] = $postId;
+
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute($params);
+    }
+
+    public function deletePost($postId, $userId) {
+        // Verify ownership
+        $stmt = $this->db->prepare("SELECT owner_id FROM companion_posts WHERE id = ?");
+        $stmt->execute([$postId]);
+        $post = $stmt->fetch();
+        if (!$post || $post['owner_id'] != $userId) {
+            throw new Exception("Access denied. You can only delete your own posts.");
+        }
+
+        // Delete associated requests first (cascade doesn't always work)
+        $stmt = $this->db->prepare("DELETE FROM companion_requests WHERE post_id = ?");
+        $stmt->execute([$postId]);
+
+        // Delete the post
+        $stmt = $this->db->prepare("DELETE FROM companion_posts WHERE id = ?");
+        return $stmt->execute([$postId]);
+    }
+
+    public function closePost($postId, $userId) {
+        // Verify ownership
+        $stmt = $this->db->prepare("SELECT owner_id FROM companion_posts WHERE id = ?");
+        $stmt->execute([$postId]);
+        $post = $stmt->fetch();
+        if (!$post || $post['owner_id'] != $userId) {
+            throw new Exception("Access denied. You can only close your own posts.");
+        }
+
+        $stmt = $this->db->prepare("UPDATE companion_posts SET status = 'closed' WHERE id = ?");
+        return $stmt->execute([$postId]);
+    }
+
+    public function getIncomingRequests($userId) {
+        $stmt = $this->db->prepare("
+            SELECT cr.*, cp.destination_place, cp.start_date, cp.end_date,
+                   req.full_name as requester_name, req.email as requester_email, req.contact_no as requester_contact, 
+                   req.gender as requester_gender, req.profile_photo as requester_photo, req.date_of_birth
+            FROM companion_requests cr
+            JOIN companion_posts cp ON cr.post_id = cp.id
+            JOIN users req ON cr.requester_id = req.id
+            WHERE cp.owner_id = ?
+            ORDER BY cr.created_at DESC
+        ");
+        $stmt->execute([$userId]);
+        return $stmt->fetchAll();
+    }
+
+    public function cancelRequest($requestId, $userId) {
+        // Verify requester
+        $stmt = $this->db->prepare("SELECT requester_id FROM companion_requests WHERE id = ?");
+        $stmt->execute([$requestId]);
+        $request = $stmt->fetch();
+        if (!$request || $request['requester_id'] != $userId) {
+            throw new Exception("Access denied. You can only cancel your own requests.");
+        }
+
+        $stmt = $this->db->prepare("DELETE FROM companion_requests WHERE id = ?");
+        return $stmt->execute([$requestId]);
+    }
 }
