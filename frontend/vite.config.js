@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   base: './', // Ensures assets load correctly from XAMPP subdirectories
   build: {
-    outDir: '../', // Compiles directly into the XAMPP serving root
-    emptyOutDir: false // CRITICAL: prevent deleting the 'api', 'database', or 'uploads' directories
+    outDir: '../assets', // Compiles into the assets directory
+    emptyOutDir: false // CRITICAL: prevent deleting other directories
   }
 })

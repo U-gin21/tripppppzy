@@ -107,6 +107,19 @@ export default function TouristDashboard({ currentUser, onProfileUpdate, initial
     }
   };
 
+  // Helper to safely hide modals
+  const safeHideModal = (modalId) => {
+    try {
+      const modalElement = document.getElementById(modalId);
+      if (modalElement && window.bootstrap && window.bootstrap.Modal) {
+        const modal = window.bootstrap.Modal.getInstance(modalElement);
+        if (modal) modal.hide();
+      }
+    } catch (err) {
+      console.error(`Error hiding modal ${modalId}:`, err);
+    }
+  };
+
   const handleSendCompanionRequest = async (e) => {
     e.preventDefault();
     if (!requestPost) {
@@ -122,10 +135,7 @@ export default function TouristDashboard({ currentUser, onProfileUpdate, initial
       setRequestMsg('');
       setRequestPost(null);
       fetchCompanionDetails();
-
-      const modalElement = document.getElementById('requestJoinModal');
-      const modal = window.bootstrap.Modal.getInstance(modalElement);
-      if (modal) modal.hide();
+      safeHideModal('requestJoinModal');
     } catch (err) {
       alert(err.message);
     } finally {
@@ -222,11 +232,7 @@ export default function TouristDashboard({ currentUser, onProfileUpdate, initial
       setEndDate('');
       setBookingDetails('');
       setSelectedService(null);
-      
-      const modalElement = document.getElementById('bookServiceModal');
-      const modal = window.bootstrap.Modal.getInstance(modalElement);
-      if (modal) modal.hide();
-
+      safeHideModal('bookServiceModal');
       fetchBookings();
     } catch (err) {
       alert(err.message);
@@ -245,10 +251,7 @@ export default function TouristDashboard({ currentUser, onProfileUpdate, initial
       setComment('');
       setRating(5);
       setReviewServiceId(null);
-
-      const modalElement = document.getElementById('addReviewModal');
-      const modal = window.bootstrap.Modal.getInstance(modalElement);
-      if (modal) modal.hide();
+      safeHideModal('addReviewModal');
     } catch (err) {
       alert(err.message);
     }
@@ -278,10 +281,7 @@ export default function TouristDashboard({ currentUser, onProfileUpdate, initial
       setPostInterests('');
       setPostDesc('');
       fetchCompanionDetails();
-
-      const modalElement = document.getElementById('createCompanionPostModal');
-      const modal = window.bootstrap.Modal.getInstance(modalElement);
-      if (modal) modal.hide();
+      safeHideModal('createCompanionPostModal');
     } catch (err) {
       alert(err.message);
     } finally {

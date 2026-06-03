@@ -105,6 +105,18 @@ export default function CompanionFinder({ currentUser }) {
   }, [currentUser, fetchIncomingRequests, fetchSentRequests, fetchMyPosts]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
+  const safeHideModal = (modalId) => {
+    try {
+      const modalElement = document.getElementById(modalId);
+      if (modalElement && window.bootstrap && window.bootstrap.Modal) {
+        const modal = window.bootstrap.Modal.getInstance(modalElement);
+        if (modal) modal.hide();
+      }
+    } catch (err) {
+      console.error(`Error hiding modal ${modalId}:`, err);
+    }
+  };
+
   const handleCreatePost = async (e) => {
     e.preventDefault();
     if (!currentUser) {
@@ -137,10 +149,7 @@ export default function CompanionFinder({ currentUser }) {
       setDesc('');
 
       refreshData();
-      
-      const modalElement = document.getElementById('createPostModal');
-      const modal = window.bootstrap.Modal.getInstance(modalElement);
-      if (modal) modal.hide();
+      safeHideModal('createPostModal');
     } catch (err) {
       setMsg({ type: 'danger', text: err.message });
     } finally {
@@ -162,10 +171,7 @@ export default function CompanionFinder({ currentUser }) {
       alert('Join request sent successfully! You will be notified via email once the host approves.');
       setRequestMsg('');
       refreshData();
-      
-      const modalElement = document.getElementById('requestJoinModal');
-      const modal = window.bootstrap.Modal.getInstance(modalElement);
-      if (modal) modal.hide();
+      safeHideModal('requestJoinModal');
     } catch (err) {
       alert(err.message);
     }
