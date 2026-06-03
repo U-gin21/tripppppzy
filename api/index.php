@@ -175,41 +175,65 @@ try {
             if (empty($input['email'])) {
                 throw new Exception("Email is required.");
             }
-            // Simple forgot password simulation: generate a temporary code and mail it
             if (!$userModel->existsEmail($input['email'])) {
                 throw new Exception("Email address is not registered.");
             }
             $token = rand(100000, 999999);
             $_SESSION['reset_email'] = $input['email'];
             $_SESSION['reset_token'] = $token;
+            $_SESSION['reset_expires'] = time() + 900; // 15 minutes validity
+            $_SESSION['reset_verified'] = false;
             
             $subject = "Tripzy Password Reset Request";
             $body = "<h2>Tripzy Password Reset</h2>";
-            $body .= "<p>We received a request to reset your password. Use the verification token below to reset it:</p>";
-            $body .= "<h3>Token: $token</h3>";
-            $body .= "<p>If you did not request this, you can ignore this email.</p>";
+            $body .= "<p>Hello,</p>";
+            $body .= "<p>We received a request to reset the password for the Tripzy account associated with this email address.</p>";
+            $body .= "<p><strong>Verification Token:</strong></p>";
+            $body .= "<h3 style='letter-spacing: 0.15em;'>$token</h3>";
+            $body .= "<p>Enter this code in the verification form to confirm your identity.</p>";
+            $body .= "<p>If you did not request this change, please ignore this email.</p>";
+            $body .= "<p>Warm regards,<br>Tripzy Sri Lanka Team</p>";
             
             if (!Mailer::send($input['email'], $subject, $body)) {
                 throw new Exception("Failed to send password reset email. Please try again later.");
             }
             $response = ["success" => true, "message" => "Reset code sent to your email."];
-            
+
+        } elseif ($action === 'verify_reset_token') {
+            if (empty($input['token'])) {
+                throw new Exception("Verification token is required.");
+            }
+            if (!isset($_SESSION['reset_token']) || !isset($_SESSION['reset_email']) || !isset($_SESSION['reset_expires'])) {
+                throw new Exception("No active password reset request found.");
+            }
+            if (time() > $_SESSION['reset_expires']) {
+                unset($_SESSION['reset_token'], $_SESSION['reset_email'], $_SESSION['reset_expires'], $_SESSION['reset_verified']);
+                throw new Exception("The verification token has expired. Please restart the password reset process.");
+            }
+            if ($_SESSION['reset_token'] != $input['token']) {
+                throw new Exception("Invalid verification token.");
+            }
+            $_SESSION['reset_verified'] = true;
+            $response = ["success" => true, "message" => "OTP verified. Please choose a new password."];
+
         } elseif ($action === 'reset_password') {
-            if (empty($input['token']) || empty($input['password'])) {
-                throw new Exception("Token and Password are required.");
+            if (empty($input['password'])) {
+                throw new Exception("New password is required.");
             }
-            if (!isset($_SESSION['reset_token']) || $_SESSION['reset_token'] != $input['token'] || !isset($_SESSION['reset_email'])) {
-                throw new Exception("Invalid or expired reset token.");
+            if (!isset($_SESSION['reset_verified']) || $_SESSION['reset_verified'] !== true || !isset($_SESSION['reset_email'])) {
+                throw new Exception("OTP verification is required before resetting the password.");
             }
-            
+            if (!isset($_SESSION['reset_expires']) || time() > $_SESSION['reset_expires']) {
+                unset($_SESSION['reset_token'], $_SESSION['reset_email'], $_SESSION['reset_expires'], $_SESSION['reset_verified']);
+                throw new Exception("The password reset session has expired. Please restart the process.");
+            }
             $email = $_SESSION['reset_email'];
             $db = Database::getInstance()->getConnection();
             $password_hash = password_hash($input['password'], PASSWORD_BCRYPT);
             $stmt = $db->prepare("UPDATE users SET password_hash = ? WHERE email = ?");
             $stmt->execute([$password_hash, $email]);
             
-            unset($_SESSION['reset_token']);
-            unset($_SESSION['reset_email']);
+            unset($_SESSION['reset_token'], $_SESSION['reset_email'], $_SESSION['reset_expires'], $_SESSION['reset_verified']);
             
             $response = ["success" => true, "message" => "Password reset successfully. You can now log in."];
         } else {

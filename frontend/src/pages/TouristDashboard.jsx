@@ -16,6 +16,8 @@ export default function TouristDashboard({ currentUser, onProfileUpdate }) {
   const [nameWithInitial, setNameWithInitial] = useState(currentUser.name_with_initial || '');
   const [contactNo, setContactNo] = useState(currentUser.contact_no);
   const [profilePhoto, setProfilePhoto] = useState(null);
+  const [previewPhotoUrl, setPreviewPhotoUrl] = useState('');
+  const [profileLoading, setProfileLoading] = useState(false);
 
   // Booking Form State
   const [selectedService, setSelectedService] = useState(null);
@@ -81,27 +83,69 @@ export default function TouristDashboard({ currentUser, onProfileUpdate }) {
     ]);
   };
 
+  // Photo preview effect
+  useEffect(() => {
+    if (!profilePhoto) {
+      setPreviewPhotoUrl('');
+      return;
+    }
+    const url = URL.createObjectURL(profilePhoto);
+    setPreviewPhotoUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [profilePhoto]);
+
   const handleProfileUpdateSubmit = async (e) => {
     e.preventDefault();
+    setProfileLoading(true);
     try {
       const formData = new FormData();
-      formData.append('full_name', fullName);
-      formData.append('name_with_initial', nameWithInitial);
-      formData.append('contact_no', contactNo);
+      let changed = false;
+
+      const trimmedFull = fullName ? fullName.trim() : '';
+      if (trimmedFull !== '' && trimmedFull !== (currentUser.full_name || '')) {
+        formData.append('full_name', trimmedFull);
+        changed = true;
+      }
+
+      const trimmedInit = nameWithInitial ? nameWithInitial.trim() : '';
+      if (trimmedInit !== '' && trimmedInit !== (currentUser.name_with_initial || '')) {
+        formData.append('name_with_initial', trimmedInit);
+        changed = true;
+      }
+
+      const trimmedContact = contactNo ? contactNo.trim() : '';
+      if (trimmedContact !== '' && trimmedContact !== (currentUser.contact_no || '')) {
+        formData.append('contact_no', trimmedContact);
+        changed = true;
+      }
+
       if (profilePhoto) {
         formData.append('profile_photo', profilePhoto);
+        changed = true;
       }
+
+      if (!changed) {
+        alert('No changes to save. Update at least one field.');
+        setProfileLoading(false);
+        return;
+      }
+
       const res = await apiRequest('profile', 'update', 'POST', formData);
-      alert("Profile updated successfully!");
-      onProfileUpdate({
-        ...currentUser,
-        full_name: fullName,
-        name_with_initial: nameWithInitial,
-        contact_no: contactNo,
-        profile_photo: res.profile_photo || currentUser.profile_photo
-      });
+      alert(res.message);
+
+      if (onProfileUpdate) {
+        const updated = { ...currentUser };
+        if (trimmedFull !== '' && trimmedFull !== (currentUser.full_name || '')) updated.full_name = trimmedFull;
+        if (trimmedInit !== '' && trimmedInit !== (currentUser.name_with_initial || '')) updated.name_with_initial = trimmedInit;
+        if (trimmedContact !== '' && trimmedContact !== (currentUser.contact_no || '')) updated.contact_no = trimmedContact;
+        if (res.profile_photo) updated.profile_photo = res.profile_photo;
+        onProfileUpdate(updated);
+      }
+      setProfilePhoto(null);
     } catch (err) {
       alert(err.message);
+    } finally {
+      setProfileLoading(false);
     }
   };
 
@@ -441,52 +485,69 @@ export default function TouristDashboard({ currentUser, onProfileUpdate }) {
         {/* TAB: PROFILE */}
         {activeTab === 'profile' && (
           <div>
-            <h2 className="fw-bold text-gradient mb-4">Manage Profile Account</h2>
-            <div className="card glass-card border-0 p-4">
-              <form onSubmit={handleProfileUpdateSubmit} className="col-md-8">
-                <div className="mb-3">
-                  <label className="form-label small fw-bold">Full Name</label>
-                  <input 
-                    type="text" 
-                    className="form-control rounded-3" 
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    required
-                  />
+            <h2 className="fw-bold text-gradient mb-4">Manage Your Tourist Profile</h2>
+            <div className="row g-4 mb-4">
+              <div className="col-md-6">
+                <div className="card glass-card p-4 border-0">
+                  <div className="text-center mb-4">
+                    <img
+                      src={profilePhoto ? previewPhotoUrl : getUploadUrl(currentUser.profile_photo) || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80'}
+                      alt="Profile"
+                      className="rounded-circle border-2 border-success mb-3"
+                      style={{ width: '120px', height: '120px', objectFit: 'cover' }}
+                    />
+                    <h5 className="fw-bold">{currentUser.full_name}</h5>
+                    <p className="text-muted small mb-0">{currentUser.email}</p>
+                  </div>
+                  <form onSubmit={handleProfileUpdateSubmit}>
+                    <div className="mb-3">
+                      <label className="form-label small fw-bold">Full Name</label>
+                      <input
+                        type="text"
+                        className="form-control rounded-3 form-control-sm"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        placeholder={currentUser.full_name || ''}
+                      />
+                      <div className="form-text small">Leave empty to keep your current name.</div>
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label small fw-bold">Name with Initials</label>
+                      <input
+                        type="text"
+                        className="form-control rounded-3 form-control-sm"
+                        value={nameWithInitial}
+                        onChange={(e) => setNameWithInitial(e.target.value)}
+                        placeholder={currentUser.name_with_initial || ''}
+                      />
+                      <div className="form-text small">Leave empty to keep your current initials.</div>
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label small fw-bold">Contact Phone Number</label>
+                      <input
+                        type="tel"
+                        className="form-control rounded-3 form-control-sm"
+                        value={contactNo}
+                        onChange={(e) => setContactNo(e.target.value)}
+                        placeholder={currentUser.contact_no || ''}
+                      />
+                      <div className="form-text small">Leave empty to keep your current contact number.</div>
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label small fw-bold">Update Profile Photo</label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="form-control rounded-3 form-control-sm"
+                        onChange={(e) => setProfilePhoto(e.target.files[0] || null)}
+                      />
+                    </div>
+                    <button type="submit" className="btn btn-gradient btn-sm rounded-pill px-4" disabled={profileLoading}>
+                      {profileLoading ? 'Saving...' : 'Save Profile'}
+                    </button>
+                  </form>
                 </div>
-                <div className="mb-3">
-                  <label className="form-label small fw-bold">Name with Initials</label>
-                  <input 
-                    type="text" 
-                    className="form-control rounded-3" 
-                    value={nameWithInitial}
-                    onChange={(e) => setNameWithInitial(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="mb-3">
-                  <label className="form-label small fw-bold">Contact Phone Number</label>
-                  <input 
-                    type="tel" 
-                    className="form-control rounded-3" 
-                    value={contactNo}
-                    onChange={(e) => setContactNo(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="mb-4">
-                  <label className="form-label small fw-bold">Update Profile Photo</label>
-                  <input 
-                    type="file" 
-                    className="form-control rounded-3" 
-                    accept="image/*"
-                    onChange={(e) => setProfilePhoto(e.target.files[0])}
-                  />
-                </div>
-                <button type="submit" className="btn btn-gradient px-4 py-2 rounded-pill shadow-sm">
-                  Save Changes
-                </button>
-              </form>
+              </div>
             </div>
           </div>
         )}

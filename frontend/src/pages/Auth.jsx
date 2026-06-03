@@ -26,6 +26,8 @@ export default function Auth({ onLoginSuccess }) {
   const [resetEmail, setResetEmail] = useState('');
   const [resetToken, setResetToken] = useState('');
   const [newPassword, setNewPassword] = useState('');
+  const [verifyMode, setVerifyMode] = useState(false);
+  const [otpVerified, setOtpVerified] = useState(false);
 
   // UI States
   const [msg, setMsg] = useState({ type: '', text: '' });
@@ -110,8 +112,29 @@ export default function Auth({ onLoginSuccess }) {
     try {
       const res = await apiRequest('auth', 'forgot_password', 'POST', { email: resetEmail });
       setMsg({ type: 'success', text: res.message });
-      setResetMode(true);
+      setVerifyMode(true);
       setForgotMode(false);
+      setResetMode(false);
+      setOtpVerified(false);
+      setResetToken('');
+    } catch (err) {
+      setMsg({ type: 'danger', text: err.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyToken = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setMsg({ type: '', text: '' });
+    try {
+      const res = await apiRequest('auth', 'verify_reset_token', 'POST', { token: resetToken });
+      setMsg({ type: 'success', text: res.message });
+      setVerifyMode(false);
+      setResetMode(true);
+      setOtpVerified(true);
+      setResetToken('');
     } catch (err) {
       setMsg({ type: 'danger', text: err.message });
     } finally {
@@ -124,8 +147,10 @@ export default function Auth({ onLoginSuccess }) {
     setLoading(true);
     setMsg({ type: '', text: '' });
     try {
+      if (!otpVerified) {
+        throw new Error('Please verify your OTP before resetting your password.');
+      }
       const res = await apiRequest('auth', 'reset_password', 'POST', {
-        token: resetToken,
         password: newPassword
       });
       setMsg({ type: 'success', text: res.message });
@@ -161,7 +186,7 @@ export default function Auth({ onLoginSuccess }) {
             {forgotMode && (
               <form onSubmit={handleForgotPassword}>
                 <h4 className="fw-bold mb-3">Forgot Password</h4>
-                <p className="text-muted small">Enter your registered email address and we'll send a 6-digit reset token to simulate with PHPMailer.</p>
+                <p className="text-muted small">Enter the email address used for your Tripzy login. We will send a 6-digit OTP to that same email so you can verify and reset your password.</p>
                 <div className="mb-3">
                   <label className="form-label small fw-bold">Email Address</label>
                   <input
@@ -170,26 +195,27 @@ export default function Auth({ onLoginSuccess }) {
                     value={resetEmail}
                     onChange={(e) => setResetEmail(e.target.value)}
                     required
-                    placeholder="Enter email address"
+                    placeholder="Enter registered email address"
                   />
                 </div>
                 <button type="submit" className="btn btn-gradient w-100 py-2 btn-lg" disabled={loading}>
                   {loading ? 'Sending...' : 'Send Verification Token'}
                 </button>
                 <div className="text-center mt-3">
-                  <button type="button" className="btn btn-link text-decoration-none small text-secondary" onClick={() => { setForgotMode(false); setIsLogin(true); }}>
+                  <button type="button" className="btn btn-link text-decoration-none small text-secondary" onClick={() => { setForgotMode(false); setIsLogin(true); setVerifyMode(false); setResetMode(false); }}>
                     Back to Login
                   </button>
                 </div>
               </form>
             )}
 
-            {/* RESET PASSWORD SECTION */}
-            {resetMode && (
-              <form onSubmit={handleResetPassword}>
-                <h4 className="fw-bold mb-3">Reset Password</h4>
+            {/* VERIFY OTP SECTION */}
+            {verifyMode && (
+              <form onSubmit={handleVerifyToken}>
+                <h4 className="fw-bold mb-3">Verify OTP</h4>
+                <p className="text-muted small">Enter the 6-digit code that was sent to your email address.</p>
                 <div className="mb-3">
-                  <label className="form-label small fw-bold">6-Digit Verification Token</label>
+                  <label className="form-label small fw-bold">Verification Token</label>
                   <input
                     type="text"
                     className="form-control form-control-lg rounded-3 text-center"
@@ -199,6 +225,22 @@ export default function Auth({ onLoginSuccess }) {
                     placeholder="123456"
                   />
                 </div>
+                <button type="submit" className="btn btn-gradient w-100 py-2 btn-lg" disabled={loading}>
+                  {loading ? 'Verifying...' : 'Verify OTP'}
+                </button>
+                <div className="text-center mt-3">
+                  <button type="button" className="btn btn-link text-decoration-none small text-secondary" onClick={() => { setVerifyMode(false); setForgotMode(true); setResetMode(false); }}>
+                    Back to Email
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* RESET PASSWORD SECTION */}
+            {resetMode && (
+              <form onSubmit={handleResetPassword}>
+                <h4 className="fw-bold mb-3">Reset Password</h4>
+                <p className="text-muted small">Verification successful. Enter a new password for your account.</p>
                 <div className="mb-3">
                   <label className="form-label small fw-bold">New Secure Password</label>
                   <input
@@ -232,12 +274,7 @@ export default function Auth({ onLoginSuccess }) {
                   />
                 </div>
                 <div className="mb-3">
-                  <div className="d-flex justify-content-between">
-                    <label className="form-label small fw-bold">Password</label>
-                    <button type="button" className="btn btn-link p-0 text-decoration-none small text-secondary" onClick={() => { setForgotMode(true); setIsLogin(false); }}>
-                      Forgot Password?
-                    </button>
-                  </div>
+                  <label className="form-label small fw-bold">Password</label>
                   <input
                     type="password"
                     className="form-control rounded-3"
@@ -250,6 +287,11 @@ export default function Auth({ onLoginSuccess }) {
                 <button type="submit" className="btn btn-gradient w-100 py-2 fs-5 mt-2" disabled={loading}>
                   {loading ? 'Verifying...' : 'Login'}
                 </button>
+                <div className="text-center mt-3">
+                  <button type="button" className="btn btn-link p-0 text-decoration-none small text-secondary" onClick={() => { setForgotMode(true); setIsLogin(false); setVerifyMode(false); setResetMode(false); setResetEmail(loginEmail); }}>
+                    Forgot Password?
+                  </button>
+                </div>
                 <div className="text-center mt-3">
                   <span className="text-muted small">Don't have an account? </span>
                   <button type="button" className="btn btn-link p-0 text-decoration-none small fw-bold" onClick={() => setIsLogin(false)}>

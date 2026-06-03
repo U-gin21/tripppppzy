@@ -118,11 +118,29 @@ export default function AdminDashboard({ currentUser, onProfileUpdate }) {
     setProfileLoading(true);
     try {
       const formData = new FormData();
-      formData.append('full_name', profileFullName);
-      formData.append('name_with_initial', profileNameWithInitial);
-      formData.append('contact_no', profileContactNo);
+      let hasChanges = false;
+
+      if (profileFullName !== currentUser.full_name) {
+        formData.append('full_name', profileFullName);
+        hasChanges = true;
+      }
+      if (profileNameWithInitial !== currentUser.name_with_initial) {
+        formData.append('name_with_initial', profileNameWithInitial);
+        hasChanges = true;
+      }
+      if (profileContactNo !== currentUser.contact_no) {
+        formData.append('contact_no', profileContactNo);
+        hasChanges = true;
+      }
       if (profilePhoto) {
         formData.append('profile_photo', profilePhoto);
+        hasChanges = true;
+      }
+
+      if (!hasChanges) {
+        alert('No changes made to your profile. Update the fields you want to change.');
+        setProfileLoading(false);
+        return;
       }
 
       const res = await apiRequest('profile', 'update', 'POST', formData);
@@ -366,6 +384,7 @@ export default function AdminDashboard({ currentUser, onProfileUpdate }) {
                     <p className="text-muted small mb-0">{currentUser.email}</p>
                   </div>
                   <form onSubmit={handleUpdateProfile}>
+                    <p className="text-muted small mb-3">Edit only the fields you want to update. Leave the rest unchanged.</p>
                     <div className="mb-3">
                       <label className="form-label small fw-bold">Full Name</label>
                       <input
@@ -373,7 +392,6 @@ export default function AdminDashboard({ currentUser, onProfileUpdate }) {
                         className="form-control rounded-3 form-control-sm"
                         value={profileFullName}
                         onChange={(e) => setProfileFullName(e.target.value)}
-                        required
                       />
                     </div>
                     <div className="mb-3">
@@ -383,7 +401,6 @@ export default function AdminDashboard({ currentUser, onProfileUpdate }) {
                         className="form-control rounded-3 form-control-sm"
                         value={profileNameWithInitial}
                         onChange={(e) => setProfileNameWithInitial(e.target.value)}
-                        required
                       />
                     </div>
                     <div className="mb-3">
@@ -393,7 +410,6 @@ export default function AdminDashboard({ currentUser, onProfileUpdate }) {
                         className="form-control rounded-3 form-control-sm"
                         value={profileContactNo}
                         onChange={(e) => setProfileContactNo(e.target.value)}
-                        required
                       />
                     </div>
                     <div className="mb-3">
