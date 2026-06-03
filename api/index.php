@@ -7,14 +7,18 @@ if (!file_exists($session_dir)) {
 session_save_path($session_dir);
 
 // Set up sessions with cookie parameters appropriate for cross-origin or local development
+// Configure session cookie params: choose SameSite/secure appropriately for local dev vs HTTPS
+$isHTTPS = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443);
+$cookieSameSite = $isHTTPS ? 'None' : 'Lax';
+$cookieSecure = $isHTTPS; // browsers require Secure flag for SameSite=None
+
 session_set_cookie_params([
     'lifetime' => 86400,
     'path' => '/',
-    'secure' => false,
+    'secure' => $cookieSecure,
     'httponly' => true,
-    // Allow cross-origin XHR/fetch requests from local dev (Vite/CRA).
-    // Note: for production with HTTPS set 'secure' => true and keep 'samesite' => 'None'.
-    'samesite' => 'None'
+    // Use 'Lax' for local non-HTTPS dev so cookies are accepted; use 'None' for secure HTTPS.
+    'samesite' => $cookieSameSite
 ]);
 session_start();
 

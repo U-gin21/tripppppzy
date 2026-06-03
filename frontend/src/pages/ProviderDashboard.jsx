@@ -1,16 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import { apiRequest, getUploadUrl } from '../api';
 
-export default function ProviderDashboard({ currentUser }) {
-  const [activeTab, setActiveTab] = useState('listings'); // listings, bookings, add_service
+export default function ProviderDashboard({ currentUser, onProfileUpdate }) {
+  const [activeTab, setActiveTab] = useState('listings'); // listings, bookings, add_service, profile
   const [listings, setListings] = useState([]);
   const [bookings, setBookings] = useState([]);
+
+  // Profile edit state
+  const [profileFullName, setProfileFullName] = useState(currentUser.full_name || '');
+  const [profileNameWithInitial, setProfileNameWithInitial] = useState(currentUser.name_with_initial || '');
+  const [profileContactNo, setProfileContactNo] = useState(currentUser.contact_no || '');
+  const [profilePhoto, setProfilePhoto] = useState(null);
+  const [previewPhotoUrl, setPreviewPhotoUrl] = useState('');
+  const [profileLoading, setProfileLoading] = useState(false);
 
   // Create Service Form State
   const [serviceType, setServiceType] = useState('hotel');
   const [nameOfInstitute, setNameOfInstitute] = useState('');
-  const [contactNo, setContactNo] = useState(currentUser.contact_no);
-  const [email, setEmail] = useState(currentUser.email);
+  const [contactNo, setContactNo] = useState(currentUser.contact_no || '');
+  const [email, setEmail] = useState(currentUser.email || '');
   const [price, setPrice] = useState('');
   const [description, setDescription] = useState('');
   const [photo, setPhoto] = useState(null);
@@ -125,6 +133,79 @@ export default function ProviderDashboard({ currentUser }) {
     }
   };
 
+  useEffect(() => {
+    if (!currentUser) return;
+    setProfileFullName(currentUser.full_name || '');
+    setProfileNameWithInitial(currentUser.name_with_initial || '');
+    setProfileContactNo(currentUser.contact_no || '');
+    setProfilePhoto(null);
+  }, [currentUser]);
+
+  useEffect(() => {
+    if (!profilePhoto) {
+      setPreviewPhotoUrl('');
+      return;
+    }
+
+    const url = URL.createObjectURL(profilePhoto);
+    setPreviewPhotoUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [profilePhoto]);
+
+  const handleUpdateProfile = async (e) => {
+    e.preventDefault();
+    setProfileLoading(true);
+    try {
+      const formData = new FormData();
+      let changed = false;
+
+      const trimmedFull = profileFullName ? profileFullName.trim() : '';
+      if (trimmedFull !== '' && trimmedFull !== (currentUser.full_name || '')) {
+        formData.append('full_name', trimmedFull);
+        changed = true;
+      }
+
+      const trimmedInit = profileNameWithInitial ? profileNameWithInitial.trim() : '';
+      if (trimmedInit !== '' && trimmedInit !== (currentUser.name_with_initial || '')) {
+        formData.append('name_with_initial', trimmedInit);
+        changed = true;
+      }
+
+      const trimmedContact = profileContactNo ? profileContactNo.trim() : '';
+      if (trimmedContact !== '' && trimmedContact !== (currentUser.contact_no || '')) {
+        formData.append('contact_no', trimmedContact);
+        changed = true;
+      }
+
+      if (profilePhoto) {
+        formData.append('profile_photo', profilePhoto);
+        changed = true;
+      }
+
+      if (!changed) {
+        alert('No changes to save. Update at least one field.');
+        return;
+      }
+
+      const res = await apiRequest('profile', 'update', 'POST', formData);
+      alert(res.message);
+
+      if (onProfileUpdate) {
+        const updated = { ...currentUser };
+        if (trimmedFull !== '' && trimmedFull !== (currentUser.full_name || '')) updated.full_name = trimmedFull;
+        if (trimmedInit !== '' && trimmedInit !== (currentUser.name_with_initial || '')) updated.name_with_initial = trimmedInit;
+        if (trimmedContact !== '' && trimmedContact !== (currentUser.contact_no || '')) updated.contact_no = trimmedContact;
+        if (res.profile_photo) updated.profile_photo = res.profile_photo;
+        onProfileUpdate(updated);
+      }
+      setProfilePhoto(null);
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
   const handleUpdateBookingStatus = async (id, status) => {
     try {
       await apiRequest('bookings', 'update_status', 'POST', { id, status });
@@ -146,7 +227,7 @@ export default function ProviderDashboard({ currentUser }) {
           <img 
             src={getUploadUrl(currentUser.profile_photo) || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80'} 
             alt="Profile" 
-            className="rounded-circle border border-2 border-primary mb-2" 
+            className="rounded-circle border-2 border-primary mb-2" 
             style={{ width: '80px', height: '80px', objectFit: 'cover' }}
           />
           <h6 className="fw-bold mb-0 text-white">{currentUser.full_name}</h6>
@@ -161,6 +242,11 @@ export default function ProviderDashboard({ currentUser }) {
           <li className={`sidebar-item ${activeTab === 'add_service' ? 'active' : ''}`}>
             <a href="#" onClick={() => setActiveTab('add_service')}>
               <i className="bi bi-plus-circle"></i> Create Offer Listing
+            </a>
+          </li>
+          <li className={`sidebar-item ${activeTab === 'profile' ? 'active' : ''}`}>
+            <a href="#" onClick={() => setActiveTab('profile')}>
+              <i className="bi bi-person-circle"></i> Manage Profile
             </a>
           </li>
           <li className={`sidebar-item ${activeTab === 'bookings' ? 'active' : ''}`}>
@@ -349,6 +435,76 @@ export default function ProviderDashboard({ currentUser }) {
           </div>
         )}
 
+        {/* TAB: PROFILE */}
+        {activeTab === 'profile' && (
+          <div>
+            <h2 className="fw-bold text-gradient mb-4">Manage Your Provider Profile</h2>
+            <div className="row g-4 mb-4">
+              <div className="col-md-6">
+                <div className="card glass-card p-4 border-0">
+                  <div className="text-center mb-4">
+                    <img
+                      src={profilePhoto ? previewPhotoUrl : getUploadUrl(currentUser.profile_photo) || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80'}
+                      alt="Profile"
+                      className="rounded-circle border-2 border-primary mb-3"
+                      style={{ width: '120px', height: '120px', objectFit: 'cover' }}
+                    />
+                    <h5 className="fw-bold">{currentUser.full_name}</h5>
+                    <p className="text-muted small mb-0">{currentUser.email}</p>
+                  </div>
+                  <form onSubmit={handleUpdateProfile}>
+                    <div className="mb-3">
+                      <label className="form-label small fw-bold">Full Name</label>
+                      <input
+                        type="text"
+                        className="form-control rounded-3 form-control-sm"
+                        value={profileFullName}
+                        onChange={(e) => setProfileFullName(e.target.value)}
+                        placeholder={currentUser.full_name || ''}
+                      />
+                      <div className="form-text small">Leave empty to keep your current name.</div>
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label small fw-bold">Name with Initials</label>
+                      <input
+                        type="text"
+                        className="form-control rounded-3 form-control-sm"
+                        value={profileNameWithInitial}
+                        onChange={(e) => setProfileNameWithInitial(e.target.value)}
+                        placeholder={currentUser.name_with_initial || ''}
+                      />
+                      <div className="form-text small">Leave empty to keep your current initials.</div>
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label small fw-bold">Contact Number</label>
+                      <input
+                        type="text"
+                        className="form-control rounded-3 form-control-sm"
+                        value={profileContactNo}
+                        onChange={(e) => setProfileContactNo(e.target.value)}
+                        placeholder={currentUser.contact_no || ''}
+                      />
+                      <div className="form-text small">Leave empty to keep your current contact number.</div>
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label small fw-bold">Update Profile Photo</label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="form-control rounded-3 form-control-sm"
+                        onChange={(e) => setProfilePhoto(e.target.files[0] || null)}
+                      />
+                    </div>
+                    <button type="submit" className="btn btn-gradient btn-sm rounded-pill px-4" disabled={profileLoading}>
+                      {profileLoading ? 'Saving...' : 'Save Profile'}
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* TAB: INCOMING BOOKINGS */}
         {activeTab === 'bookings' && (
           <div>
@@ -434,7 +590,7 @@ export default function ProviderDashboard({ currentUser }) {
                   <img 
                     src={`https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80`} 
                     alt="Customer" 
-                    className="rounded-circle mb-3 border border-2 border-primary" 
+                    className="rounded-circle mb-3 border-2 border-primary" 
                     style={{ width: '90px', height: '90px', objectFit: 'cover' }}
                   />
                   <h5 className="fw-bold mb-1">{selectedCust.tourist_name}</h5>

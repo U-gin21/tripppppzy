@@ -130,7 +130,7 @@ export default function App() {
               <TouristDashboard currentUser={currentUser} onProfileUpdate={setCurrentUser} />
             )}
             {currentUser.user_type === 'provider' && (
-              <ProviderDashboard currentUser={currentUser} />
+              <ProviderDashboard currentUser={currentUser} onProfileUpdate={setCurrentUser} />
             )}
             {currentUser.user_type === 'admin' && (
               <AdminDashboard currentUser={currentUser} onProfileUpdate={setCurrentUser} />
