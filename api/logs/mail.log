@@ -846,3 +846,57 @@ Body:
 <h2>Tripzy Password Reset</h2><p>Hello,</p><p>We received a request to reset the password for the Tripzy account associated with this email address.</p><p><strong>Verification Token:</strong></p><h3 style='letter-spacing: 0.15em;'>447514</h3><p>Enter this code in the verification form to confirm your identity.</p><p>If you did not request this change, please ignore this email.</p><p>Warm regards,<br>Tripzy Sri Lanka Team</p>
 ========================================
 
+========================================
+Timestamp: 2026-06-03 16:20:46
+To: smahazinulhathik@gmail.com
+Subject: Tripzy Booking Confirmation Request - Ref: TZ-G-20260603-7444
+Body:
+<h2>Dear Mahazinul Hathik,</h2><p>Your booking request for <strong>maank</strong> has been submitted successfully!</p><h3>Booking Reference Details:</h3><ul><li><strong>Booking Ref No:</strong> TZ-G-20260603-7444</li><li><strong>Service:</strong> Guide (maank)</li><li><strong>Duration:</strong> 2026-06-03 to 2026-06-04 (1 day/s)</li><li><strong>Total Cost:</strong> LKR 678.00</li><li><strong>Payment Mode:</strong> Offline (Pay on Arrival / Physical Payment to Provider)</li><li><strong>Status:</strong> PENDING CONFIRMATION</li></ul><p>Please pay the provider physically upon arrival to complete your booking. The service provider will verify your reference number and mark the booking as completed.</p><p>Best Regards,<br>Tripzy Sri Lanka Team</p>
+========================================
+
+PHPMailer Exception: SMTP Error: Could not connect to SMTP host. Failed to connect to server
+========================================
+Timestamp: 2026-06-03 16:20:46
+To: shaarusharujan@gmail.com
+Subject: New Booking Received - Ref: TZ-G-20260603-7444
+Body:
+<h2>Hello Provider,</h2><p>You have received a new booking request for your service: <strong>maank</strong>.</p><p><strong>Client:</strong> Mahazinul Hathik (smahazinulhathik@gmail.com)</p><p><strong>Dates:</strong> 2026-06-03 to 2026-06-04</p><p><strong>Price:</strong> LKR 678.00</p><p>Please review and update the status in your Provider Dashboard.</p>
+========================================
+
+PHPMailer Exception: SMTP Error: Could not connect to SMTP host. Failed to connect to server
+========================================
+Timestamp: 2026-06-03 16:21:33
+To: smahazinulhathik@gmail.com
+Subject: Tripzy Booking Confirmation Request - Ref: TZ-G-20260603-9262
+Body:
+<h2>Dear Mahazinul Hathik,</h2><p>Your booking request for <strong>maank</strong> has been submitted successfully!</p><h3>Booking Reference Details:</h3><ul><li><strong>Booking Ref No:</strong> TZ-G-20260603-9262</li><li><strong>Service:</strong> Guide (maank)</li><li><strong>Duration:</strong> 2026-06-03 to 2026-06-05 (2 day/s)</li><li><strong>Total Cost:</strong> LKR 1,356.00</li><li><strong>Payment Mode:</strong> Offline (Pay on Arrival / Physical Payment to Provider)</li><li><strong>Status:</strong> PENDING CONFIRMATION</li></ul><p>Please pay the provider physically upon arrival to complete your booking. The service provider will verify your reference number and mark the booking as completed.</p><p>Best Regards,<br>Tripzy Sri Lanka Team</p>
+========================================
+
+PHPMailer Exception: SMTP Error: Could not connect to SMTP host. Failed to connect to server
+========================================
+Timestamp: 2026-06-03 16:21:33
+To: shaarusharujan@gmail.com
+Subject: New Booking Received - Ref: TZ-G-20260603-9262
+Body:
+<h2>Hello Provider,</h2><p>You have received a new booking request for your service: <strong>maank</strong>.</p><p><strong>Client:</strong> Mahazinul Hathik (smahazinulhathik@gmail.com)</p><p><strong>Dates:</strong> 2026-06-03 to 2026-06-05</p><p><strong>Price:</strong> LKR 1,356.00</p><p>Please review and update the status in your Provider Dashboard.</p>
+========================================
+
+PHPMailer Exception: SMTP Error: Could not connect to SMTP host. Failed to connect to server
+========================================
+Timestamp: 2026-06-03 16:23:09
+To: smahazinulhathik@gmail.com
+Subject: Tripzy Booking Status Updated - Ref: TZ-G-20260603-9262
+Body:
+<h2>Dear Mahazinul Hathik,</h2><p>Your booking for <strong>maank</strong> (Ref: TZ-G-20260603-9262) has been marked as: <strong>COMPLETED</strong>.</p><p>Thank you for completing your payment. Your booking is officially verified. The service post has been disabled to prevent further bookings for this specific offer.</p><p>Warm Regards,<br>Tripzy Sri Lanka Team</p>
+========================================
+
+PHPMailer Exception: SMTP Error: Could not connect to SMTP host. Failed to connect to server
+========================================
+Timestamp: 2026-06-03 16:23:14
+To: smahazinulhathik@gmail.com
+Subject: Tripzy Booking Status Updated - Ref: TZ-G-20260603-7444
+Body:
+<h2>Dear Mahazinul Hathik,</h2><p>Your booking for <strong>maank</strong> (Ref: TZ-G-20260603-7444) has been marked as: <strong>COMPLETED</strong>.</p><p>Thank you for completing your payment. Your booking is officially verified. The service post has been disabled to prevent further bookings for this specific offer.</p><p>Warm Regards,<br>Tripzy Sri Lanka Team</p>
+========================================
+
+PHPMailer Exception: SMTP Error: Could not connect to SMTP host. Failed to connect to server

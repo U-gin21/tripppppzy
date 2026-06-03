@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function Home({ onNavigate }) {
+export default function Home({ onNavigate, currentUser }) {
   const testimonials = [
     { name: "Sarah Miller", text: "The hotel booking and companion system was incredibly easy to use. Highly recommended for solo travelers!", location: "United Kingdom" },
     { name: "Suresh Perera", text: "Registered my vehicle hiring business on Tripzy. Within days, I had multiple bookings from international tourists.", location: "Colombo, Sri Lanka" },
@@ -8,11 +8,19 @@ export default function Home({ onNavigate }) {
   ];
 
   const servicesList = [
-    { title: "Hotel Reservation", icon: "bi-building", desc: "Find comfortable, luxury, or budget-friendly resorts and hotels across the country." },
-    { title: "Vehicle Hiring", icon: "bi-car-front-fill", desc: "Rent cars, motorbikes, or tour vans with verified drivers for secure transportation." },
-    { title: "Tour Guide Booking", icon: "bi-compass-fill", desc: "Hire certified multilingual tour guides to explain the heritage sites." },
-    { title: "Camping Tools Rental", icon: "bi-backpack-fill", desc: "Rent high-quality tents, sleeping bags, and camping tools for wilderness treks." }
+    { title: "Hotel Reservation", icon: "bi-building", desc: "Find comfortable, luxury, or budget-friendly resorts and hotels across the country.", serviceType: 'hotel' },
+    { title: "Vehicle Hiring", icon: "bi-car-front-fill", desc: "Rent cars, motorbikes, or tour vans with verified drivers for secure transportation.", serviceType: 'vehicle' },
+    { title: "Tour Guide Booking", icon: "bi-compass-fill", desc: "Hire certified multilingual tour guides to explain the heritage sites.", serviceType: 'guide' },
+    { title: "Camping Tools Rental", icon: "bi-backpack-fill", desc: "Rent high-quality tents, sleeping bags, and camping tools for wilderness treks.", serviceType: 'camping_tool' }
   ];
+
+  const handleServiceClick = (service) => {
+    if (currentUser && currentUser.user_type === 'tourist') {
+      onNavigate('dashboard', { initialTab: 'services', serviceType: service.serviceType });
+      return;
+    }
+    onNavigate('auth');
+  };
 
   return (
     <div className="animate-fade-in">
@@ -92,7 +100,7 @@ export default function Home({ onNavigate }) {
           <div className="row g-4">
             {servicesList.map((srv, index) => (
               <div className="col-md-6 col-lg-3" key={index}>
-                <div className="card border-0 p-4 rounded-4 shadow-sm text-center h-100 bg-white">
+                <div className="card border-0 p-4 rounded-4 shadow-sm text-center h-100 bg-white clickable-service" style={{ cursor: 'pointer' }} onClick={() => handleServiceClick(srv)}>
                   <div className="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style={{ width: '60px', height: '60px' }}>
                     <i className={`bi ${srv.icon} fs-3`}></i>
                   </div>

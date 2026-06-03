@@ -137,12 +137,18 @@ class Booking {
         if ($result) {
             $booking = $this->getById($id);
             if ($booking) {
+                // If booking is completed, disable the associated service post so it cannot be booked again.
+                if ($status === 'completed') {
+                    $serviceStmt = $this->db->prepare("UPDATE services SET status = 'disabled' WHERE id = ?");
+                    $serviceStmt->execute([$booking['service_id']]);
+                }
+
                 // Email status update to Tourist
                 $subject = "Tripzy Booking Status Updated - Ref: " . $booking['ref_no'];
                 $body = "<h2>Dear " . htmlspecialchars($booking['tourist_name']) . ",</h2>";
                 $body .= "<p>Your booking for <strong>" . htmlspecialchars($booking['name_of_institute']) . "</strong> (Ref: " . $booking['ref_no'] . ") has been marked as: <strong>" . strtoupper($status) . "</strong>.</p>";
                 if ($status === 'completed') {
-                    $body .= "<p>Thank you for completing your payment. Your booking is officially verified. We hope you enjoy your tour in Sri Lanka!</p>";
+                    $body .= "<p>Thank you for completing your payment. Your booking is officially verified. The service post has been disabled to prevent further bookings for this specific offer.</p>";
                 } else if ($status === 'rejected') {
                     $body .= "<p>We are sorry, but your booking request was declined. Please contact the provider at " . htmlspecialchars($booking['service_contact']) . " for details.</p>";
                 }

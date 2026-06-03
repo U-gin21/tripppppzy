@@ -15,6 +15,7 @@ export default function App() {
   const [page, setPage] = useState('home');
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [dashboardIntent, setDashboardIntent] = useState(null);
 
   const checkSession = async () => {
     try {
@@ -33,6 +34,19 @@ export default function App() {
   useEffect(() => {
     checkSession();
   }, []);
+
+  useEffect(() => {
+    if (page !== 'dashboard') {
+      setDashboardIntent(null);
+    }
+  }, [page]);
+
+  const navigate = (target, options = {}) => {
+    if (target === 'dashboard') {
+      setDashboardIntent(options);
+    }
+    setPage(target);
+  };
 
   const handleLogout = async () => {
     if (!window.confirm("Are you sure you want to log out?")) return;
@@ -115,7 +129,7 @@ export default function App() {
 
       {/* RENDER ACTIVE SCREEN */}
       <main style={{ minHeight: '80vh' }}>
-        {page === 'home' && <Home onNavigate={setPage} />}
+        {page === 'home' && <Home onNavigate={navigate} currentUser={currentUser} />}
         {page === 'explore' && <Explore />}
         {page === 'companions' && <CompanionFinder currentUser={currentUser} />}
         {page === 'about' && <AboutUs />}
@@ -127,7 +141,12 @@ export default function App() {
         {page === 'dashboard' && currentUser && (
           <>
             {currentUser.user_type === 'tourist' && (
-              <TouristDashboard currentUser={currentUser} onProfileUpdate={setCurrentUser} />
+              <TouristDashboard
+                currentUser={currentUser}
+                onProfileUpdate={setCurrentUser}
+                initialTab={dashboardIntent?.initialTab}
+                initialServiceType={dashboardIntent?.serviceType}
+              />
             )}
             {currentUser.user_type === 'provider' && (
               <ProviderDashboard currentUser={currentUser} onProfileUpdate={setCurrentUser} />

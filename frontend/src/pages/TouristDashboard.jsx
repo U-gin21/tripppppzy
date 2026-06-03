@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { apiRequest, getUploadUrl } from '../api';
 
-export default function TouristDashboard({ currentUser, onProfileUpdate }) {
-  const [activeTab, setActiveTab] = useState('bookings'); // bookings, services, companion, profile, notifications
+export default function TouristDashboard({ currentUser, onProfileUpdate, initialTab, initialServiceType }) {
+  const [activeTab, setActiveTab] = useState(initialTab || 'bookings'); // bookings, services, companion, profile, notifications
 
   // Data states
   const [bookings, setBookings] = useState([]);
@@ -31,7 +31,19 @@ export default function TouristDashboard({ currentUser, onProfileUpdate }) {
   const [comment, setComment] = useState('');
 
   // Search service filter
-  const [serviceTypeFilter, setServiceTypeFilter] = useState('hotel');
+  const [serviceTypeFilter, setServiceTypeFilter] = useState(initialServiceType || 'hotel');
+
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab]);
+
+  useEffect(() => {
+    if (initialServiceType) {
+      setServiceTypeFilter(initialServiceType);
+    }
+  }, [initialServiceType]);
 
   // Load details
   useEffect(() => {
@@ -207,7 +219,7 @@ export default function TouristDashboard({ currentUser, onProfileUpdate }) {
           <img 
             src={getUploadUrl(currentUser.profile_photo) || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80'} 
             alt="Profile" 
-            className="rounded-circle border border-2 border-success mb-2" 
+            className="rounded-circle border-2 border-success mb-2" 
             style={{ width: '80px', height: '80px', objectFit: 'cover' }}
           />
           <h6 className="fw-bold mb-0 text-white">{currentUser.full_name}</h6>
