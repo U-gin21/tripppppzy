@@ -1,0 +1,455 @@
+import React, { useEffect, useState } from 'react';
+import { apiRequest, getUploadUrl } from '../api';
+
+export default function ProviderDashboard({ currentUser }) {
+  const [activeTab, setActiveTab] = useState('listings'); // listings, bookings, add_service
+  const [listings, setListings] = useState([]);
+  const [bookings, setBookings] = useState([]);
+
+  // Create Service Form State
+  const [serviceType, setServiceType] = useState('hotel');
+  const [nameOfInstitute, setNameOfInstitute] = useState('');
+  const [contactNo, setContactNo] = useState(currentUser.contact_no);
+  const [email, setEmail] = useState(currentUser.email);
+  const [price, setPrice] = useState('');
+  const [description, setDescription] = useState('');
+  const [photo, setPhoto] = useState(null);
+
+  // Edit Service Form State
+  const [editingId, setEditingId] = useState(null);
+  const [editName, setEditName] = useState('');
+  const [editPrice, setEditPrice] = useState('');
+  const [editDesc, setEditDesc] = useState('');
+
+  // Selected Booking Customer Details Modal
+  const [selectedCust, setSelectedCust] = useState(null);
+
+  useEffect(() => {
+    fetchListings();
+    fetchBookings();
+  }, []);
+
+  const fetchListings = async () => {
+    try {
+      const res = await apiRequest('services', 'provider_list');
+      setListings(res.services || []);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchBookings = async () => {
+    try {
+      const res = await apiRequest('bookings', 'provider_list');
+      setBookings(res.bookings || []);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleCreateService = async (e) => {
+    e.preventDefault();
+    try {
+      const formData = new FormData();
+      formData.append('service_type', serviceType);
+      formData.append('name_of_institute', nameOfInstitute);
+      formData.append('contact_no', contactNo);
+      formData.append('email', email);
+      formData.append('price', price);
+      formData.append('description', description);
+      if (photo) {
+        formData.append('photo', photo);
+      } else {
+        alert("Please upload a picture of the service listing.");
+        return;
+      }
+
+      await apiRequest('services', 'create', 'POST', formData);
+      alert("Service post created successfully! It is now enabled on the system.");
+      
+      // Reset form
+      setNameOfInstitute('');
+      setPrice('');
+      setDescription('');
+      setPhoto(null);
+      
+      setActiveTab('listings');
+      fetchListings();
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const handleToggleStatus = async (id, currentStatus) => {
+    try {
+      const nextStatus = currentStatus === 'enabled' ? 'disabled' : 'enabled';
+      await apiRequest('services', 'toggle_status', 'POST', { id, status: nextStatus });
+      fetchListings();
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const handleDeleteListing = async (id) => {
+    if (!window.confirm("Are you sure you want to permanently delete this listing?")) return;
+    try {
+      await apiRequest('services', 'delete', 'POST', { id });
+      alert("Listing deleted successfully.");
+      fetchListings();
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const handleEditInit = (srv) => {
+    setEditingId(srv.id);
+    setEditName(srv.name_of_institute);
+    setEditPrice(srv.price);
+    setEditDesc(srv.description);
+  };
+
+  const handleUpdateServiceSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await apiRequest('services', 'update', 'POST', {
+        id: editingId,
+        name_of_institute: editName,
+        price: editPrice,
+        description: editDesc
+      });
+      alert("Listing updated successfully.");
+      setEditingId(null);
+      fetchListings();
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const handleUpdateBookingStatus = async (id, status) => {
+    try {
+      await apiRequest('bookings', 'update_status', 'POST', { id, status });
+      alert(`Booking has been marked as ${status.toUpperCase()} and the tourist has been emailed.`);
+      fetchBookings();
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  return (
+    <div className="dashboard-container">
+      {/* SIDEBAR */}
+      <div className="sidebar">
+        <div className="sidebar-brand">
+          <i className="bi bi-building-fill text-success me-2"></i>Provider Panel
+        </div>
+        <div className="text-center mb-4">
+          <img 
+            src={getUploadUrl(currentUser.profile_photo) || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80'} 
+            alt="Profile" 
+            className="rounded-circle border border-2 border-primary mb-2" 
+            style={{ width: '80px', height: '80px', objectFit: 'cover' }}
+          />
+          <h6 className="fw-bold mb-0 text-white">{currentUser.full_name}</h6>
+          <span className="badge bg-primary rounded-pill px-2 py-1 mt-1 small">Service Provider</span>
+        </div>
+        <ul className="sidebar-menu">
+          <li className={`sidebar-item ${activeTab === 'listings' ? 'active' : ''}`}>
+            <a href="#" onClick={() => setActiveTab('listings')}>
+              <i className="bi bi-card-list"></i> My Service Posts
+            </a>
+          </li>
+          <li className={`sidebar-item ${activeTab === 'add_service' ? 'active' : ''}`}>
+            <a href="#" onClick={() => setActiveTab('add_service')}>
+              <i className="bi bi-plus-circle"></i> Create Offer Listing
+            </a>
+          </li>
+          <li className={`sidebar-item ${activeTab === 'bookings' ? 'active' : ''}`}>
+            <a href="#" onClick={() => setActiveTab('bookings')}>
+              <i className="bi bi-briefcase"></i> Incoming Bookings
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      {/* CONTENT REGION */}
+      <div className="dashboard-content animate-fade-in">
+        
+        {/* TAB: MY LISTINGS */}
+        {activeTab === 'listings' && (
+          <div>
+            <h2 className="fw-bold text-gradient mb-4">My Service Listings</h2>
+            {editingId && (
+              <div className="card glass-card p-4 border-0 mb-4 animate-fade-in">
+                <h5 className="fw-bold text-primary mb-3">Edit Offer Post</h5>
+                <form onSubmit={handleUpdateServiceSubmit}>
+                  <div className="row g-3">
+                    <div className="col-md-6">
+                      <label className="form-label small fw-bold">Name of Institute</label>
+                      <input type="text" className="form-control rounded-3" value={editName} onChange={(e) => setEditName(e.target.value)} required />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label small fw-bold">Price / Day (LKR)</label>
+                      <input type="number" className="form-control rounded-3" value={editPrice} onChange={(e) => setEditPrice(e.target.value)} required />
+                    </div>
+                    <div className="col-12">
+                      <label className="form-label small fw-bold">Description</label>
+                      <textarea className="form-control rounded-3" rows="3" value={editDesc} onChange={(e) => setEditDesc(e.target.value)} required></textarea>
+                    </div>
+                  </div>
+                  <div className="mt-3">
+                    <button type="submit" className="btn btn-gradient btn-sm rounded-pill px-4 me-2">Save</button>
+                    <button type="button" className="btn btn-light btn-sm rounded-pill px-4" onClick={() => setEditingId(null)}>Cancel</button>
+                  </div>
+                </form>
+              </div>
+            )}
+
+            {listings.length > 0 ? (
+              <div className="row g-4">
+                {listings.map(srv => (
+                  <div className="col-md-6 col-lg-4" key={srv.id}>
+                    <div className="card glass-card h-100 border-0 p-4 d-flex flex-column justify-content-between">
+                      <div>
+                        <div className="d-flex justify-content-between mb-2">
+                          <span className="badge bg-secondary bg-opacity-10 text-dark text-capitalize">{srv.service_type}</span>
+                          <span className={`badge ${srv.status === 'enabled' ? 'bg-success' : 'bg-danger'} text-white`}>
+                            {srv.status === 'enabled' ? 'Active' : 'Disabled'}
+                          </span>
+                        </div>
+                        <h5 className="fw-bold mb-2">{srv.name_of_institute}</h5>
+                        <p className="text-muted small line-clamp-3 mb-3">{srv.description}</p>
+                        <div className="mb-3 small">
+                          <span className="fw-bold d-block">Contact Info:</span>
+                          <span className="text-muted">{srv.contact_no} | {srv.email}</span>
+                          <span className="d-block fw-bold text-success mt-2">LKR {Number(srv.price).toLocaleString()} / day</span>
+                        </div>
+                      </div>
+
+                      <div className="pt-3 border-top d-flex gap-2">
+                        <button className="btn btn-outline-primary btn-sm flex-fill" onClick={() => handleEditInit(srv)}>
+                          <i className="bi bi-pencil-square"></i> Edit
+                        </button>
+                        <button 
+                          className={`btn btn-${srv.status === 'enabled' ? 'outline-warning' : 'warning'} btn-sm flex-fill`}
+                          onClick={() => handleToggleStatus(srv.id, srv.status)}
+                        >
+                          {srv.status === 'enabled' ? 'Disable' : 'Enable'}
+                        </button>
+                        <button className="btn btn-outline-danger btn-sm" onClick={() => handleDeleteListing(srv.id)}>
+                          <i className="bi bi-trash"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-5 card glass-card border-0">
+                <i className="bi bi-card-list fs-1 text-muted"></i>
+                <h5 className="fw-bold mt-3">You Haven't Offered Any Services Yet</h5>
+                <p className="text-muted">Click the 'Create Offer Listing' tab to list your hotel, vehicle, guide, or camping gear services.</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TAB: CREATE LISTING */}
+        {activeTab === 'add_service' && (
+          <div>
+            <h2 className="fw-bold text-gradient mb-4">Create Offer Post</h2>
+            <div className="card glass-card border-0 p-4 col-lg-8">
+              <form onSubmit={handleCreateService}>
+                <div className="row">
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label small fw-bold">Select Service Category</label>
+                    <select className="form-select rounded-3" value={serviceType} onChange={(e) => setServiceType(e.target.value)}>
+                      <option value="hotel">Hotel / Resort Booking</option>
+                      <option value="vehicle">Vehicle Hiring</option>
+                      <option value="guide">Tour Guide Hiring</option>
+                      <option value="camping_tool">Camping Gear Rental</option>
+                    </select>
+                  </div>
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label small fw-bold">Name of Institute / Service Post Title</label>
+                    <input 
+                      type="text" 
+                      className="form-control rounded-3" 
+                      value={nameOfInstitute} 
+                      onChange={(e) => setNameOfInstitute(e.target.value)} 
+                      required 
+                      placeholder="e.g. Sigiriya Villa Resort, Ella Safaris"
+                    />
+                  </div>
+                </div>
+
+                <div className="row">
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label small fw-bold">Contact Phone Number</label>
+                    <input 
+                      type="tel" 
+                      className="form-control rounded-3" 
+                      value={contactNo} 
+                      onChange={(e) => setContactNo(e.target.value)} 
+                      required 
+                    />
+                  </div>
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label small fw-bold">Email Address</label>
+                    <input 
+                      type="email" 
+                      className="form-control rounded-3" 
+                      value={email} 
+                      onChange={(e) => setEmail(e.target.value)} 
+                      required 
+                    />
+                  </div>
+                </div>
+
+                <div className="row">
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label small fw-bold">Price / Day (LKR)</label>
+                    <input 
+                      type="number" 
+                      className="form-control rounded-3" 
+                      value={price} 
+                      onChange={(e) => setPrice(e.target.value)} 
+                      required 
+                      placeholder="e.g. 5000"
+                    />
+                  </div>
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label small fw-bold">Listing Image / Photo</label>
+                    <input 
+                      type="file" 
+                      className="form-control rounded-3" 
+                      accept="image/*" 
+                      onChange={(e) => setPhoto(e.target.files[0])} 
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="mb-4">
+                  <label className="form-label small fw-bold">Description / About the Service</label>
+                  <textarea 
+                    className="form-control rounded-3" 
+                    rows="4" 
+                    value={description} 
+                    onChange={(e) => setDescription(e.target.value)} 
+                    required 
+                    placeholder="Provide pricing parameters, inclusions, safety records, or policies..."
+                  ></textarea>
+                </div>
+
+                <button type="submit" className="btn btn-gradient px-5 py-2 rounded-pill shadow-sm">
+                  Publish Post
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* TAB: INCOMING BOOKINGS */}
+        {activeTab === 'bookings' && (
+          <div>
+            <h2 className="fw-bold text-gradient mb-4">Incoming Tourist Booking Requests</h2>
+            <div className="card glass-card border-0 p-4">
+              {bookings.length > 0 ? (
+                <div className="table-responsive">
+                  <table className="table table-hover align-middle">
+                    <thead className="table-light">
+                      <tr>
+                        <th>Ref No</th>
+                        <th>Tourist Client</th>
+                        <th>Dates</th>
+                        <th>Price Sum</th>
+                        <th>Request Details</th>
+                        <th>Status</th>
+                        <th>Action Buttons</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {bookings.map(book => (
+                        <tr key={book.id}>
+                          <td><strong className="text-primary">{book.ref_no}</strong></td>
+                          <td>
+                            <button 
+                              className="btn btn-link p-0 text-decoration-none fw-bold"
+                              data-bs-toggle="modal"
+                              data-bs-target="#customerDetailsModal"
+                              onClick={() => setSelectedCust(book)}
+                            >
+                              {book.tourist_name}
+                            </button>
+                          </td>
+                          <td>{book.start_date} to {book.end_date}</td>
+                          <td>LKR {Number(book.price).toLocaleString()}</td>
+                          <td><span className="small text-muted">{book.booking_details || 'None'}</span></td>
+                          <td>
+                            <span className={`badge-${book.status}`}>
+                              {book.status.toUpperCase()}
+                            </span>
+                          </td>
+                          <td>
+                            {book.status === 'pending' ? (
+                              <div className="d-flex gap-2">
+                                <button className="btn btn-success btn-sm rounded-pill px-3" onClick={() => handleUpdateBookingStatus(book.id, 'completed')}>
+                                  Verify Cash
+                                </button>
+                                <button className="btn btn-danger btn-sm rounded-pill px-3" onClick={() => handleUpdateBookingStatus(book.id, 'rejected')}>
+                                  Decline
+                                </button>
+                              </div>
+                            ) : (
+                              <span className="text-muted small">No action needed</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="text-center py-5">
+                  <i className="bi bi-briefcase fs-1 text-muted"></i>
+                  <p className="mt-3 text-muted">No tourist bookings have been made for your items yet.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* CUSTOMER DETAILS MODAL */}
+      <div className="modal fade" id="customerDetailsModal" tabIndex="-1" aria-hidden="true">
+        <div className="modal-dialog modal-dialog-centered">
+          <div className="modal-content rounded-4 border-0">
+            <div className="modal-header border-0 pb-0">
+              <h4 className="modal-title fw-bold text-gradient">Tourist Profile Details</h4>
+              <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div className="modal-body p-4">
+              {selectedCust && (
+                <div className="d-flex flex-column align-items-center text-center">
+                  <img 
+                    src={`https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80`} 
+                    alt="Customer" 
+                    className="rounded-circle mb-3 border border-2 border-primary" 
+                    style={{ width: '90px', height: '90px', objectFit: 'cover' }}
+                  />
+                  <h5 className="fw-bold mb-1">{selectedCust.tourist_name}</h5>
+                  <span className="badge bg-secondary mb-3">Tourist Member</span>
+                  
+                  <div className="w-100 text-start bg-light p-3 rounded-3 mt-2">
+                    <p className="mb-2"><strong>Email Address:</strong> {selectedCust.tourist_email}</p>
+                    <p className="mb-0"><strong>Contact Phone:</strong> {selectedCust.tourist_contact}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
