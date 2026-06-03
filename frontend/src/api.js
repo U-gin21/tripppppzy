@@ -1,10 +1,11 @@
-const API_BASE = window.location.origin.includes('localhost:5173') 
-  ? 'http://localhost/TRIPZY%20FINAL/api' 
+const isLocalDev = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+const API_BASE = isLocalDev
+  ? 'http://localhost/TRIPZY%20FINAL/api'
   : window.location.origin + '/TRIPZY%20FINAL/api';
 
 export const getUploadUrl = (path) => {
   if (!path) return '';
-  const root = window.location.origin.includes('localhost:5173')
+  const root = isLocalDev
     ? 'http://localhost/TRIPZY%20FINAL'
     : window.location.origin + '/TRIPZY%20FINAL';
   return `${root}/uploads/${path}`;
@@ -21,6 +22,8 @@ export async function apiRequest(controller, action, method = 'GET', data = null
   const options = {
     method,
     credentials: 'include', // Crucial for PHP Session support
+    mode: 'cors',
+    cache: 'no-cache'
   };
 
   if (method !== 'GET' && data) {
@@ -37,9 +40,20 @@ export async function apiRequest(controller, action, method = 'GET', data = null
 
   try {
     const response = await fetch(url, options);
-    const json = await response.json();
+    const text = await response.text();
+    if (!text) {
+      throw new Error(`Empty response from server for ${controller}/${action}.`);
+    }
+
+    let json;
+    try {
+      json = JSON.parse(text);
+    } catch (parseError) {
+      throw new Error(`Invalid JSON response from ${controller}/${action}: ${parseError.message}\n${text}`);
+    }
+
     if (!response.ok || json.success === false) {
-      throw new Error(json.error || json.message || 'Request failed.');
+      throw new Error(json.error || json.message || `Request failed with status ${response.status}.`);
     }
     return json;
   } catch (error) {

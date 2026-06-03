@@ -33,23 +33,45 @@ class Mailer {
             try {
                 $mail = new PHPMailer(true);
                 $mail->isSMTP();
+                $mail->SMTPDebug = 0;
+                $mail->Debugoutput = function($str, $level) {
+                    error_log("PHPMailer debug [{$level}]: {$str}");
+                };
                 $mail->Host = SMTP_HOST;
                 $mail->SMTPAuth = true;
                 $mail->Username = SMTP_USER;
                 $mail->Password = SMTP_PASS;
                 $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
                 $mail->Port = SMTP_PORT;
+                $mail->SMTPOptions = [
+                    'ssl' => [
+                        'verify_peer' => false,
+                        'verify_peer_name' => false,
+                        'allow_self_signed' => true,
+                    ],
+                ];
+                $mail->CharSet = 'UTF-8';
+
+                if (!filter_var($to, FILTER_VALIDATE_EMAIL)) {
+                    throw new Exception("Invalid recipient email address: $to");
+                }
 
                 $mail->setFrom(SMTP_FROM_EMAIL, SMTP_FROM_NAME);
+                $mail->addReplyTo(SMTP_FROM_EMAIL, SMTP_FROM_NAME);
                 $mail->addAddress($to);
 
                 $mail->isHTML(true);
                 $mail->Subject = $subject;
                 $mail->Body = $body;
+                $mail->AltBody = strip_tags($body);
 
-                return $mail->send();
+                if (!$mail->send()) {
+                    throw new Exception($mail->ErrorInfo);
+                }
+                return true;
             } catch (Exception $e) {
                 error_log("PHPMailer Exception: " . $e->getMessage());
+                @file_put_contents(MAIL_LOG_FILE, "PHPMailer Exception: " . $e->getMessage() . "\n", FILE_APPEND);
                 return false;
             }
         }

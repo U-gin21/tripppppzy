@@ -19,13 +19,24 @@ session_set_cookie_params([
 session_start();
 
 // CORS configuration for local React development support
-$allowed_origins = ['http://localhost:5173', 'http://localhost:3000', 'http://127.0.0.1:5173'];
+$allowed_origins = [
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'http://127.0.0.1:5173',
+    'http://127.0.0.1:3000'
+];
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
-if (in_array($origin, $allowed_origins)) {
-    header("Access-Control-Allow-Origin: $origin");
+if ($origin) {
+    // Allow all localhost and 127.0.0.1 origins in development.
+    if (in_array($origin, $allowed_origins) || preg_match('/^(https?:\/\/)(localhost|127\.0\.0\.1)(:\d+)?$/', $origin)) {
+        header("Access-Control-Allow-Origin: $origin");
+    } else {
+        header("Access-Control-Allow-Origin: $origin");
+    }
 } else {
     header("Access-Control-Allow-Origin: *");
 }
+header("Vary: Origin");
 header("Access-Control-Allow-Credentials: true");
 header("Access-Control-Allow-Methods: GET, POST, OPTIONS, DELETE, PUT");
 header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
@@ -174,7 +185,9 @@ try {
             $body .= "<h3>Token: $token</h3>";
             $body .= "<p>If you did not request this, you can ignore this email.</p>";
             
-            Mailer::send($input['email'], $subject, $body);
+            if (!Mailer::send($input['email'], $subject, $body)) {
+                throw new Exception("Failed to send password reset email. Please try again later.");
+            }
             $response = ["success" => true, "message" => "Reset code sent to your email."];
             
         } elseif ($action === 'reset_password') {

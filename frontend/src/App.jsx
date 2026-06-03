@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { apiRequest } from './api';
 import Home from './pages/Home';
 import Explore from './pages/Explore';
@@ -16,11 +16,6 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Check active session on startup
-  useEffect(() => {
-    checkSession();
-  }, []);
-
   const checkSession = async () => {
     try {
       const res = await apiRequest('auth', 'me');
@@ -28,11 +23,16 @@ export default function App() {
         setCurrentUser(res.user);
       }
     } catch (err) {
-      console.log("No active session:", err.message);
+      console.log('No active session:', err.message);
     } finally {
       setLoading(false);
     }
   };
+
+  // Check active session on startup
+  useEffect(() => {
+    checkSession();
+  }, []);
 
   const handleLogout = async () => {
     if (!window.confirm("Are you sure you want to log out?")) return;
@@ -133,7 +133,7 @@ export default function App() {
               <ProviderDashboard currentUser={currentUser} />
             )}
             {currentUser.user_type === 'admin' && (
-              <AdminDashboard currentUser={currentUser} />
+              <AdminDashboard currentUser={currentUser} onProfileUpdate={setCurrentUser} />
             )}
           </>
         )}

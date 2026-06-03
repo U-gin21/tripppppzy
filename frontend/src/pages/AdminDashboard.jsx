@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { apiRequest } from '../api';
+import { useEffect, useState } from 'react';
+import { apiRequest, getUploadUrl } from '../api';
 
-export default function AdminDashboard({ currentUser }) {
-  const [activeTab, setActiveTab] = useState('stats'); // stats, approvals, destinations, faqs, bookings
+export default function AdminDashboard({ currentUser, onProfileUpdate }) {
+  const [activeTab, setActiveTab] = useState('stats'); // stats, approvals, destinations, faqs, bookings, profile
   
   // Data states
   const [stats, setStats] = useState(null);
@@ -11,6 +11,13 @@ export default function AdminDashboard({ currentUser }) {
   const [destinations, setDestinations] = useState([]);
   const [faqs, setFaqs] = useState([]);
   const [bookings, setBookings] = useState([]);
+  
+  // Profile edit state
+  const [profileFullName, setProfileFullName] = useState('');
+  const [profileNameWithInitial, setProfileNameWithInitial] = useState('');
+  const [profileContactNo, setProfileContactNo] = useState('');
+  const [profilePhoto, setProfilePhoto] = useState(null);
+  const [profileLoading, setProfileLoading] = useState(false);
   
   // Destination Creation State
   const [destName, setDestName] = useState('');
@@ -35,16 +42,24 @@ export default function AdminDashboard({ currentUser }) {
     fetchBookings();
   }, []);
 
-  const fetchStats = async () => {
+  useEffect(() => {
+    if (!currentUser) return;
+    setProfileFullName(currentUser.full_name || '');
+    setProfileNameWithInitial(currentUser.name_with_initial || '');
+    setProfileContactNo(currentUser.contact_no || '');
+    setProfilePhoto(null);
+  }, [currentUser]);
+
+  async function fetchStats() {
     try {
       const res = await apiRequest('admin', 'stats');
       setStats(res);
     } catch (err) {
       console.error(err);
     }
-  };
+  }
 
-  const fetchPendingUsers = async () => {
+  async function fetchPendingUsers() {
     try {
       const adminRes = await apiRequest('admin', 'pending_admins');
       setPendingAdmins(adminRes.pending_admins || []);
@@ -54,43 +69,78 @@ export default function AdminDashboard({ currentUser }) {
     } catch (err) {
       console.error(err);
     }
-  };
+  }
 
-  const fetchDestinations = async () => {
+  async function fetchDestinations() {
     try {
       const res = await apiRequest('destinations', 'list');
       setDestinations(res.destinations || []);
     } catch (err) {
       console.error(err);
     }
-  };
+  }
 
-  const fetchFaqs = async () => {
+  async function fetchFaqs() {
     try {
       const res = await apiRequest('faqs', 'list');
       setFaqs(res.faqs || []);
     } catch (err) {
       console.error(err);
     }
-  };
+  }
 
-  const fetchBookings = async () => {
+  async function fetchBookings() {
     try {
       const res = await apiRequest('bookings', 'all');
       setBookings(res.bookings || []);
     } catch (err) {
       console.error(err);
     }
-  };
+  }
 
-  const handleApproveUser = async (id, status) => {
+  const handleApproveUser = async (id, status, type) => {
     try {
       await apiRequest('admin', 'approve_user', 'POST', { id, status });
       alert(`User status has been successfully set to ${status.toUpperCase()} and the user was notified.`);
-      fetchPendingUsers();
+      if (type === 'admin') {
+        setPendingAdmins((prev) => prev.filter((user) => user.id !== id));
+      } else if (type === 'provider') {
+        setPendingProviders((prev) => prev.filter((user) => user.id !== id));
+      }
       fetchStats();
     } catch (err) {
       alert(err.message);
+    }
+  };
+
+  const handleUpdateProfile = async (e) => {
+    e.preventDefault();
+    setProfileLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('full_name', profileFullName);
+      formData.append('name_with_initial', profileNameWithInitial);
+      formData.append('contact_no', profileContactNo);
+      if (profilePhoto) {
+        formData.append('profile_photo', profilePhoto);
+      }
+
+      const res = await apiRequest('profile', 'update', 'POST', formData);
+      alert(res.message);
+      if (onProfileUpdate) {
+        onProfileUpdate({
+          ...currentUser,
+          full_name: profileFullName,
+          name_with_initial: profileNameWithInitial,
+          contact_no: profileContactNo,
+          profile_photo: res.profile_photo || currentUser.profile_photo
+        });
+      }
+      setProfilePhoto(null);
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setProfileLoading(false);
     }
   };
 
@@ -176,7 +226,7 @@ export default function AdminDashboard({ currentUser }) {
         </div>
         <div className="text-center mb-4">
           <img 
-            src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=150&q=80" 
+            src={getUploadUrl(currentUser.profile_photo) || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=150&q=80'} 
             alt="Profile" 
             className="rounded-circle border border-2 border-danger mb-2" 
             style={{ width: '80px', height: '80px', objectFit: 'cover' }}
@@ -203,6 +253,11 @@ export default function AdminDashboard({ currentUser }) {
           <li className={`sidebar-item ${activeTab === 'faqs' ? 'active' : ''}`}>
             <a href="#" onClick={() => setActiveTab('faqs')}>
               <i className="bi bi-question-circle"></i> FAQs Manage
+            </a>
+          </li>
+          <li className={`sidebar-item ${activeTab === 'profile' ? 'active' : ''}`}>
+            <a href="#" onClick={() => setActiveTab('profile')}>
+              <i className="bi bi-person-circle"></i> Profile
             </a>
           </li>
           <li className={`sidebar-item ${activeTab === 'bookings' ? 'active' : ''}`}>
@@ -293,6 +348,73 @@ export default function AdminDashboard({ currentUser }) {
           </div>
         )}
 
+        {/* TAB: PROFILE */}
+        {activeTab === 'profile' && (
+          <div>
+            <h2 className="fw-bold text-gradient mb-4">Admin Profile Settings</h2>
+            <div className="row g-4">
+              <div className="col-md-6">
+                <div className="card glass-card p-4 border-0">
+                  <div className="text-center mb-4">
+                    <img
+                      src={getUploadUrl(currentUser.profile_photo) || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=150&q=80'}
+                      alt="Profile"
+                      className="rounded-circle border border-2 border-danger mb-3"
+                      style={{ width: '120px', height: '120px', objectFit: 'cover' }}
+                    />
+                    <h5 className="fw-bold">{currentUser.full_name}</h5>
+                    <p className="text-muted small mb-0">{currentUser.email}</p>
+                  </div>
+                  <form onSubmit={handleUpdateProfile}>
+                    <div className="mb-3">
+                      <label className="form-label small fw-bold">Full Name</label>
+                      <input
+                        type="text"
+                        className="form-control rounded-3 form-control-sm"
+                        value={profileFullName}
+                        onChange={(e) => setProfileFullName(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label small fw-bold">Name with Initials</label>
+                      <input
+                        type="text"
+                        className="form-control rounded-3 form-control-sm"
+                        value={profileNameWithInitial}
+                        onChange={(e) => setProfileNameWithInitial(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label small fw-bold">Contact Number</label>
+                      <input
+                        type="text"
+                        className="form-control rounded-3 form-control-sm"
+                        value={profileContactNo}
+                        onChange={(e) => setProfileContactNo(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label small fw-bold">Update Profile Photo</label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="form-control rounded-3 form-control-sm"
+                        onChange={(e) => setProfilePhoto(e.target.files[0] || null)}
+                      />
+                    </div>
+                    <button type="submit" className="btn btn-gradient btn-sm rounded-pill px-4" disabled={profileLoading}>
+                      {profileLoading ? 'Saving...' : 'Save Profile'}
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* TAB: PENDING APPROVALS */}
         {activeTab === 'approvals' && (
           <div>
@@ -312,8 +434,8 @@ export default function AdminDashboard({ currentUser }) {
                             <span className="text-muted small">{adm.email} | NIC: {adm.nic_passport}</span>
                           </div>
                           <div className="d-flex gap-2">
-                            <button className="btn btn-success btn-sm rounded-pill px-3" onClick={() => handleApproveUser(adm.id, 'active')}>Approve</button>
-                            <button className="btn btn-outline-danger btn-sm rounded-pill px-3" onClick={() => handleApproveUser(adm.id, 'rejected')}>Reject</button>
+                            <button className="btn btn-success btn-sm rounded-pill px-3" onClick={() => handleApproveUser(adm.id, 'active', 'admin')}>Approve</button>
+                            <button className="btn btn-outline-danger btn-sm rounded-pill px-3" onClick={() => handleApproveUser(adm.id, 'rejected', 'admin')}>Reject</button>
                           </div>
                         </div>
                       ))}
@@ -337,8 +459,8 @@ export default function AdminDashboard({ currentUser }) {
                             <span className="text-muted small">{prov.email} | Contact: {prov.contact_no}</span>
                           </div>
                           <div className="d-flex gap-2">
-                            <button className="btn btn-success btn-sm rounded-pill px-3" onClick={() => handleApproveUser(prov.id, 'active')}>Approve</button>
-                            <button className="btn btn-outline-danger btn-sm rounded-pill px-3" onClick={() => handleApproveUser(prov.id, 'rejected')}>Reject</button>
+                            <button className="btn btn-success btn-sm rounded-pill px-3" onClick={() => handleApproveUser(prov.id, 'active', 'provider')}>Approve</button>
+                            <button className="btn btn-outline-danger btn-sm rounded-pill px-3" onClick={() => handleApproveUser(prov.id, 'rejected', 'provider')}>Reject</button>
                           </div>
                         </div>
                       ))}
