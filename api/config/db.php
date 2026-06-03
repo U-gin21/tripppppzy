@@ -32,6 +32,7 @@ class Database {
             self::$instance = new Database();
         }
         return self::$instance;
+        echo "";
     }
 
     public function getConnection() {
