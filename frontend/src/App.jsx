@@ -16,6 +16,7 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [dashboardIntent, setDashboardIntent] = useState(null);
+  const [authMode, setAuthMode] = useState('login');
 
   const checkSession = async () => {
     try {
@@ -107,7 +108,7 @@ export default function App() {
               </li>
             </ul>
 
-            <div className="d-flex align-items-center gap-3">
+            <div className="d-flex align-items-center gap-2">
               {currentUser ? (
                 <>
                   <button className="btn btn-outline-gradient btn-sm rounded-pill px-3" onClick={() => setPage('dashboard')}>
@@ -118,9 +119,17 @@ export default function App() {
                   </button>
                 </>
               ) : (
-                <button className="btn btn-gradient btn-sm rounded-pill px-4" onClick={() => setPage('auth')}>
-                  <i className="bi bi-person-fill me-1"></i> Login / Register
-                </button>
+                <>
+                  <button className="btn btn-outline-gradient btn-sm rounded-pill px-3 fw-bold" onClick={() => { setPage('auth'); setAuthMode('login'); }}>
+                    Login
+                  </button>
+                  <button className="btn btn-gradient btn-sm rounded-pill px-3" onClick={() => { setPage('auth'); setAuthMode('register'); }}>
+                    Register
+                  </button>
+                  <div className="rounded-circle border d-flex align-items-center justify-content-center bg-white shadow-sm ms-1" style={{ width: '38px', height: '38px', borderColor: '#e2e8f0', cursor: 'pointer' }} onClick={() => { setPage('auth'); setAuthMode('login'); }}>
+                    <i className="bi bi-person text-secondary fs-5"></i>
+                  </div>
+                </>
               )}
             </div>
           </div>
@@ -136,7 +145,10 @@ export default function App() {
         {page === 'faqs' && <FAQs />}
         {page === 'contact' && <ContactUs />}
         {page === 'auth' && (
-          <Auth onLoginSuccess={(user) => { setCurrentUser(user); setPage('dashboard'); }} />
+          <Auth 
+            initialMode={authMode} 
+            onLoginSuccess={(user) => { setCurrentUser(user); setPage('dashboard'); }} 
+          />
         )}
         {page === 'dashboard' && currentUser && (
           <>

@@ -63,6 +63,7 @@ require_once __DIR__ . '/models/Booking.php';
 require_once __DIR__ . '/models/Destination.php';
 require_once __DIR__ . '/models/Companion.php';
 require_once __DIR__ . '/models/FAQ.php';
+require_once __DIR__ . '/helpers/Mailer.php';
 
 // Helper for file uploads
 function uploadImageFile($field, $dir) {
