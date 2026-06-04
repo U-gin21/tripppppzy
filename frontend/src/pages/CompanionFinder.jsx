@@ -247,66 +247,117 @@ export default function CompanionFinder({ currentUser }) {
 
       {loading ? (
         <div className="text-center py-5">
-          <div className="spinner-border text-primary" role="status">
+          <div className="spinner-border text-emerald" role="status">
             <span className="visually-hidden">Loading Posts...</span>
           </div>
         </div>
       ) : posts.length > 0 ? (
-        <div className="row g-4">
+        <div className="row">
           {posts.map((post) => {
             const age = post.date_of_birth ? new Date().getFullYear() - new Date(post.date_of_birth).getFullYear() : 25;
+            
+            // Map common destinations to beautiful images, or fallback
+            let destImage = "https://images.unsplash.com/photo-1546708973-b339540b5162?auto=format&fit=crop&w=600&q=80";
+            const destLower = post.destination_place.toLowerCase();
+            if (destLower.includes('mirissa')) {
+              destImage = "https://images.unsplash.com/photo-1588598130836-8e562c161ab8?auto=format&fit=crop&w=600&q=80"; // Mirissa Beach
+            } else if (destLower.includes('ella')) {
+              destImage = "https://images.unsplash.com/photo-1546708973-b339540b5162?auto=format&fit=crop&w=600&q=80"; // Ella Rock / Nine arch
+            } else if (destLower.includes('yala')) {
+              destImage = "https://images.unsplash.com/photo-1581888227599-779811939961?auto=format&fit=crop&w=600&q=80"; // Yala Leopard
+            } else if (destLower.includes('sigiriya')) {
+              destImage = "https://images.unsplash.com/photo-1578593139888-39622e2047de?auto=format&fit=crop&w=600&q=80"; // Sigiriya
+            } else if (destLower.includes('kandy')) {
+              destImage = "https://images.unsplash.com/photo-1588598130836-8e562c161ab8?auto=format&fit=crop&w=600&q=80"; // Kandy
+            } else if (destLower.includes('beach')) {
+              destImage = "https://images.unsplash.com/photo-1588598130836-8e562c161ab8?auto=format&fit=crop&w=600&q=80";
+            }
+            
+            // Map owner genders to dynamic avatars to look realistic
+            const avatarUrl = post.owner_gender === 'female' 
+              ? "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80"
+              : "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&q=80";
+
             return (
-              <div className="col-md-6 col-lg-4" key={post.id}>
-                <div className="card glass-card h-100 border-0 p-4 d-flex flex-column justify-content-between">
-                  <div>
-                    <div className="d-flex align-items-center gap-3 mb-3 border-bottom pb-3">
-                      <img 
-                        src={`https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80`} 
-                        alt={post.full_name} 
-                        className="rounded-circle border border-2 border-primary" 
-                        style={{ width: '50px', height: '50px', objectFit: 'cover' }}
-                      />
-                      <div>
-                        <h6 className="fw-bold mb-0">{post.full_name}</h6>
-                        <span className="text-muted small text-capitalize">{post.owner_gender}, {age} yrs</span>
+              <div className="col-12" key={post.id}>
+                <div className="horizontal-companion-card animate-fade-in">
+                  {/* Left Column: Image with overlay badge */}
+                  <div className="companion-card-image-section">
+                    <img src={destImage} alt={post.destination_place} />
+                    <span className="badge bg-success bg-opacity-95 position-absolute top-0 start-0 m-3 px-3 py-2 rounded-pill shadow-sm">
+                      Confirmed Trip
+                    </span>
+                  </div>
+
+                  {/* Right Column: User details, description and buttons */}
+                  <div className="companion-card-info-section">
+                    <div>
+                      <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                        {/* User Avatar + Details */}
+                        <div className="d-flex align-items-center gap-3">
+                          <img 
+                            src={avatarUrl} 
+                            alt={post.full_name} 
+                            className="rounded-circle border border-2 border-emerald" 
+                            style={{ width: '40px', height: '40px', objectFit: 'cover' }}
+                          />
+                          <div>
+                            <h6 className="fw-bold mb-0 text-dark" style={{ fontSize: '14px' }}>{post.full_name}</h6>
+                            <span className="text-muted text-capitalize" style={{ fontSize: '11px' }}>
+                              {post.owner_gender || 'Gender'}, {age} yrs • <i className="bi bi-star-fill text-warning"></i> 4.9 Rating
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Companions Needed badge */}
+                        <span className="badge bg-light text-dark border px-3 py-2 rounded-pill small">
+                          Need: <strong className="text-emerald">{post.companions_needed}</strong> companions
+                        </span>
+                      </div>
+
+                      {/* Destination Heading */}
+                      <h3 className="fw-bold text-gradient mb-2">{post.destination_place}</h3>
+
+                      {/* Travel Date & Budget Badges */}
+                      <div className="d-flex flex-wrap gap-2 mb-3">
+                        <span className="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill small">
+                          <i className="bi bi-calendar-event me-1"></i> {post.start_date} to {post.end_date}
+                        </span>
+                        <span className="badge bg-success bg-opacity-10 text-success px-3 py-2 rounded-pill small">
+                          <i className="bi bi-wallet2 me-1"></i> LKR {post.budget_range}
+                        </span>
+                        {post.gender_preference && (
+                          <span className="badge bg-info bg-opacity-10 text-info px-3 py-2 rounded-pill small text-capitalize">
+                            Pref: {post.gender_preference}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Description */}
+                      <p className="text-muted small line-clamp-3 mb-3">{post.description}</p>
+                      
+                      {/* Travel Interests */}
+                      <div className="mb-2">
+                        <span className="small d-inline-block fw-bold text-secondary me-2">Travel Interests:</span>
+                        <span className="text-muted small">{post.travel_interests}</span>
                       </div>
                     </div>
 
-                    <h4 className="fw-bold text-gradient mb-2">{post.destination_place}</h4>
-                    
-                    <div className="d-flex flex-wrap gap-2 mb-3">
-                      <span className="badge bg-primary bg-opacity-10 text-primary small">
-                        <i className="bi bi-calendar-event me-1"></i> {post.start_date} to {post.end_date}
-                      </span>
-                      <span className="badge bg-success bg-opacity-10 text-success small">
-                        <i className="bi bi-wallet2 me-1"></i> LKR {post.budget_range}
-                      </span>
+                    {/* Join Trip Button */}
+                    <div className="pt-3 border-top d-flex justify-content-end align-items-center mt-2">
+                      {currentUser && currentUser.id == post.owner_id ? (
+                        <span className="badge bg-teal text-white rounded-pill px-4 py-2 shadow-sm" style={{ background: '#0d9488' }}>Your Post</span>
+                      ) : (
+                        <button 
+                          className="btn btn-gradient rounded-pill px-4 py-2 shadow-sm"
+                          data-bs-toggle="modal"
+                          data-bs-target="#requestJoinModal"
+                          onClick={() => setSelectedPost(post)}
+                        >
+                          <i className="bi bi-send me-1"></i> Join Trip
+                        </button>
+                      )}
                     </div>
-
-                    <p className="text-muted small line-clamp-3 mb-3">{post.description}</p>
-                    
-                    <div className="mb-3">
-                      <span className="small d-block fw-bold text-secondary">Travel Interests:</span>
-                      <span className="text-muted small">{post.travel_interests}</span>
-                    </div>
-                  </div>
-
-                  <div className="pt-3 border-top d-flex justify-content-between align-items-center">
-                    <span className="small text-muted">
-                      Need: <strong className="text-dark">{post.companions_needed}</strong> companions
-                    </span>
-                    {currentUser && currentUser.id == post.owner_id ? (
-                      <span className="badge bg-info text-white rounded-pill px-3 py-2">Your Post</span>
-                    ) : (
-                      <button 
-                        className="btn btn-gradient btn-sm rounded-pill px-3"
-                        data-bs-toggle="modal"
-                        data-bs-target="#requestJoinModal"
-                        onClick={() => setSelectedPost(post)}
-                      >
-                        Join Trip
-                      </button>
-                    )}
                   </div>
                 </div>
               </div>

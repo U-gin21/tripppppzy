@@ -92,7 +92,7 @@ export default function Home({ onNavigate, currentUser }) {
         </div>
       </section>
 
-      {/* SERVICE DIRECTORY */}
+      {/* SERVICE DIRECTORY (BENTO GRID) */}
       <section className="bg-light py-5">
         <div className="container">
           <div className="text-center mb-5">
@@ -101,18 +101,122 @@ export default function Home({ onNavigate, currentUser }) {
             <p className="text-muted col-md-6 mx-auto">Get connected with vetted local providers offering premium services across the country.</p>
           </div>
 
-          <div className="row g-4">
-            {servicesList.map((srv, index) => (
-              <div className="col-md-6 col-lg-3" key={index}>
-                <div className="card border-0 p-4 rounded-4 shadow-sm text-center h-100 bg-white clickable-service" style={{ cursor: 'pointer' }} onClick={() => handleServiceClick(srv)}>
-                  <div className="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style={{ width: '60px', height: '60px' }}>
-                    <i className={`bi ${srv.icon} fs-3`}></i>
+          <div className="bento-grid">
+            {/* Hotel Reservation */}
+            <div className="bento-item wide" onClick={() => handleServiceClick(servicesList[0])} style={{ cursor: 'pointer' }}>
+              <div className="bento-img-wrapper">
+                <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80" alt="Hotels" />
+              </div>
+              <div className="bento-overlay"></div>
+              <div className="bento-content">
+                <span className="badge bg-success rounded-pill px-3 py-2 mb-2 align-self-start" style={{ width: 'fit-content' }}>STAY</span>
+                <h3 className="fw-bold mb-2">Hotel Reservations</h3>
+                <p className="text-white-50 small mb-0">Handpicked luxury villas, beach resorts, and cozy boutique hotels across Sri Lanka.</p>
+              </div>
+            </div>
+
+            {/* Vehicle Hiring */}
+            <div className="bento-item medium" onClick={() => handleServiceClick(servicesList[1])} style={{ cursor: 'pointer' }}>
+              <div className="bento-img-wrapper">
+                <img src="https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=600&q=80" alt="Vehicles" />
+              </div>
+              <div className="bento-overlay"></div>
+              <div className="bento-content">
+                <span className="badge bg-info rounded-pill px-3 py-2 mb-2" style={{ width: 'fit-content' }}>DRIVE</span>
+                <h3 className="fw-bold mb-2">Vehicle Hiring</h3>
+                <p className="text-white-50 small mb-0">Rent premium SUVs, comfortable vans, or local Tuk-Tuks with verified drivers.</p>
+              </div>
+            </div>
+
+            {/* Tour Guides */}
+            <div className="bento-item medium" onClick={() => handleServiceClick(servicesList[2])} style={{ cursor: 'pointer' }}>
+              <div className="bento-img-wrapper">
+                <img src="https://images.unsplash.com/photo-1544085311-11a028465b53?auto=format&fit=crop&w=600&q=80" alt="Guides" />
+              </div>
+              <div className="bento-overlay"></div>
+              <div className="bento-content">
+                <span className="badge bg-warning text-dark rounded-pill px-3 py-2 mb-2" style={{ width: 'fit-content' }}>GUIDE</span>
+                <h3 className="fw-bold mb-2">Tour Guides</h3>
+                <p className="text-white-50 small mb-0">Hire certified multilingual local guides to explain the heritage sites.</p>
+              </div>
+            </div>
+
+            {/* Camping Tools Rental */}
+            <div className="bento-item wide" onClick={() => handleServiceClick(servicesList[3])} style={{ cursor: 'pointer' }}>
+              <div className="bento-img-wrapper">
+                <img src="https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=800&q=80" alt="Camping" />
+              </div>
+              <div className="bento-overlay"></div>
+              <div className="bento-content d-flex flex-row justify-content-between align-items-end flex-wrap gap-3">
+                <div style={{ flex: '1 1 300px' }}>
+                  <span className="badge bg-danger rounded-pill px-3 py-2 mb-2" style={{ width: 'fit-content' }}>ADVENTURE</span>
+                  <h3 className="fw-bold mb-2">Camping Tools Rental</h3>
+                  <p className="text-white-50 small mb-0">Rent top-quality tents, backpacks, lighting, and sleeping bags for wilderness trails.</p>
+                </div>
+                <div className="d-flex gap-3 mb-1" style={{ zIndex: 10 }}>
+                  <div className="bg-white bg-opacity-25 text-white px-3 py-2 rounded-4 text-center border border-white border-opacity-10" style={{ minWidth: '70px', backdropFilter: 'blur(5px)' }}>
+                    <i className="bi bi-tent fs-5 d-block"></i>
+                    <span style={{ fontSize: '10px', fontWeight: 'bold' }}>Tents</span>
                   </div>
-                  <h5 className="fw-bold">{srv.title}</h5>
-                  <p className="text-muted small mb-0">{srv.desc}</p>
+                  <div className="bg-white bg-opacity-25 text-white px-3 py-2 rounded-4 text-center border border-white border-opacity-10" style={{ minWidth: '70px', backdropFilter: 'blur(5px)' }}>
+                    <i className="bi bi-lightbulb fs-5 d-block"></i>
+                    <span style={{ fontSize: '10px', fontWeight: 'bold' }}>Lighting</span>
+                  </div>
                 </div>
               </div>
-            ))}
+            </div>
+
+            {/* Travel Companion Finder */}
+            <div className="bento-item full" onClick={() => handleServiceClick(servicesList[4])} style={{ cursor: 'pointer' }}>
+              <div className="bento-img-wrapper">
+                <img src="https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=1200&q=80" alt="Companion" />
+              </div>
+              <div className="bento-overlay"></div>
+              <div className="bento-content">
+                <span className="badge bg-primary rounded-pill px-3 py-2 mb-2" style={{ width: 'fit-content' }}>SOCIAL</span>
+                <h3 className="fw-bold mb-2">Travel Companion Finder</h3>
+                <p className="text-white-50 small mb-0">Don't travel alone! Join verified trip groups, share expenses, and meet international friends to explore Sri Lanka's beauty together.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 3 STEPS ROADMAP */}
+      <section className="container py-5 my-3">
+        <div className="text-center mb-5">
+          <span className="text-success small fw-bold">EASY START</span>
+          <h2 className="fw-bold text-gradient display-5">Start Your Adventure in 3 Steps</h2>
+          <p className="text-muted col-md-6 mx-auto">Getting ready for your dream trip to the Pearl of the Indian Ocean is easier than ever.</p>
+        </div>
+
+        <div className="row g-4 text-center mt-2">
+          <div className="col-md-4">
+            <div className="d-flex flex-column align-items-center">
+              <div className="rounded-circle d-flex align-items-center justify-content-center mb-3 animate-float" style={{ width: '80px', height: '80px', background: 'rgba(5, 150, 105, 0.1)', color: '#059669' }}>
+                <i className="bi bi-person-badge-fill fs-2"></i>
+              </div>
+              <h5 className="fw-bold">1. Create a Profile</h5>
+              <p className="text-muted small col-10 mx-auto">Tell us about your travel style, interests, and where you're from to help us tailor your experience.</p>
+            </div>
+          </div>
+          <div className="col-md-4">
+            <div className="d-flex flex-column align-items-center">
+              <div className="rounded-circle d-flex align-items-center justify-content-center mb-3 animate-float" style={{ width: '80px', height: '80px', background: 'rgba(13, 148, 136, 0.1)', color: '#0d9488' }}>
+                <i className="bi bi-people-fill fs-2"></i>
+              </div>
+              <h5 className="fw-bold">2. Book or Find Companions</h5>
+              <p className="text-muted small col-10 mx-auto">Reserve luxury stays and vehicles, or browse our social feed to find the perfect travel buddy.</p>
+            </div>
+          </div>
+          <div className="col-md-4">
+            <div className="d-flex flex-column align-items-center">
+              <div className="rounded-circle d-flex align-items-center justify-content-center mb-3 animate-float" style={{ width: '80px', height: '80px', background: 'rgba(5, 150, 105, 0.1)', color: '#059669' }}>
+                <i className="bi bi-compass-fill fs-2"></i>
+              </div>
+              <h5 className="fw-bold">3. Discover Sri Lanka</h5>
+              <p className="text-muted small col-10 mx-auto">Embark on your journey with everything managed and your companions ready for an unforgettable time.</p>
+            </div>
           </div>
         </div>
       </section>
@@ -120,22 +224,90 @@ export default function Home({ onNavigate, currentUser }) {
       {/* TESTIMONIALS */}
       <section className="container py-5">
         <div className="text-center mb-5">
-          <span className="text-primary small fw-bold">FEEDBACK</span>
-          <h2 className="fw-bold text-gradient">What Our Travelers Say</h2>
+          <span className="text-primary small fw-bold">TRAVELERS' STORIES</span>
+          <h2 className="fw-bold text-gradient display-5">What Our Travelers Say</h2>
+          <p className="text-muted col-md-6 mx-auto">Real experiences from those who explored the wonder with us.</p>
         </div>
 
         <div className="row g-4">
-          {testimonials.map((test, index) => (
-            <div className="col-md-4" key={index}>
-              <div className="testimonial-card h-100 d-flex flex-column justify-content-between">
-                <p className="text-muted italic">"{test.text}"</p>
+          <div className="col-md-4">
+            <div className="testimonial-card h-100 d-flex flex-column justify-content-between">
+              <div>
+                <div className="text-warning mb-3">
+                  <i className="bi bi-star-fill text-success"></i>{' '}
+                  <i className="bi bi-star-fill text-success"></i>{' '}
+                  <i className="bi bi-star-fill text-success"></i>{' '}
+                  <i className="bi bi-star-fill text-success"></i>{' '}
+                  <i className="bi bi-star-fill text-success"></i>
+                </div>
+                <p className="text-muted italic">"Tripzy made our honeymoon in Ella absolutely magical. The villa they recommended had the most breathtaking view of the Nine Arches Bridge!"</p>
+              </div>
+              <div className="d-flex align-items-center gap-3 mt-3">
+                <img 
+                  src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&q=80" 
+                  alt="Sarah Miller" 
+                  className="rounded-circle border border-2 border-emerald"
+                  style={{ width: '45px', height: '45px', objectFit: 'cover' }}
+                />
                 <div>
-                  <h6 className="fw-bold mb-0">{test.name}</h6>
-                  <span className="text-muted small">{test.location}</span>
+                  <h6 className="fw-bold mb-0">Sarah Miller</h6>
+                  <span className="text-muted small text-secondary">London, UK</span>
                 </div>
               </div>
             </div>
-          ))}
+          </div>
+          <div className="col-md-4">
+            <div className="testimonial-card h-100 d-flex flex-column justify-content-between">
+              <div>
+                <div className="text-warning mb-3">
+                  <i className="bi bi-star-fill text-success"></i>{' '}
+                  <i className="bi bi-star-fill text-success"></i>{' '}
+                  <i className="bi bi-star-fill text-success"></i>{' '}
+                  <i className="bi bi-star-fill text-success"></i>{' '}
+                  <i className="bi bi-star-fill text-success"></i>
+                </div>
+                <p className="text-muted italic">"Professional from start to finish. The vehicle we rented was pristine and our driver knew all the best local spots for authentic Kottu!"</p>
+              </div>
+              <div className="d-flex align-items-center gap-3 mt-3">
+                <img 
+                  src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100&q=80" 
+                  alt="David Chen" 
+                  className="rounded-circle border border-2 border-emerald"
+                  style={{ width: '45px', height: '45px', objectFit: 'cover' }}
+                />
+                <div>
+                  <h6 className="fw-bold mb-0">David Chen</h6>
+                  <span className="text-muted small text-secondary">Singapore</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="col-md-4">
+            <div className="testimonial-card h-100 d-flex flex-column justify-content-between">
+              <div>
+                <div className="text-warning mb-3">
+                  <i className="bi bi-star-fill text-success"></i>{' '}
+                  <i className="bi bi-star-fill text-success"></i>{' '}
+                  <i className="bi bi-star-fill text-success"></i>{' '}
+                  <i className="bi bi-star-fill text-success"></i>{' '}
+                  <i className="bi bi-star-fill text-success"></i>
+                </div>
+                <p className="text-muted italic">"Renting camping gear through Tripzy for our trek in Yala was so easy. High-quality equipment that kept us safe and comfortable."</p>
+              </div>
+              <div className="d-flex align-items-center gap-3 mt-3">
+                <img 
+                  src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80" 
+                  alt="Elena Rodriguez" 
+                  className="rounded-circle border border-2 border-emerald"
+                  style={{ width: '45px', height: '45px', objectFit: 'cover' }}
+                />
+                <div>
+                  <h6 className="fw-bold mb-0">Elena Rodriguez</h6>
+                  <span className="text-muted small text-secondary">Madrid, Spain</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 

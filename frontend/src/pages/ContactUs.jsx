@@ -22,8 +22,9 @@ export default function ContactUs() {
   return (
     <div className="container py-5 animate-fade-in">
       <div className="text-center mb-5">
-        <h1 className="fw-bold text-gradient">Contact Us</h1>
-        <p className="text-muted">Have inquiries or need assistance? Reach out to the Tripzy team.</p>
+        <span className="badge bg-success rounded-pill px-3 py-2 mb-3 text-uppercase">Support & Inquiries</span>
+        <h1 className="fw-bold text-gradient display-4">Contact Us</h1>
+        <p className="text-muted lead col-md-6 mx-auto mt-2">Have inquiries or need assistance? Reach out to the Tripzy team.</p>
       </div>
 
       <div className="row g-5 justify-content-center">
@@ -33,7 +34,7 @@ export default function ContactUs() {
             <div>
               <h4 className="fw-bold mb-4 text-gradient">Get In Touch</h4>
               <div className="d-flex align-items-start gap-3 mb-4">
-                <div className="bg-primary bg-opacity-10 text-primary p-3 rounded-3">
+                <div className="bg-success bg-opacity-10 text-success p-3 rounded-3" style={{ background: 'rgba(5, 150, 105, 0.1)', color: '#059669' }}>
                   <i className="bi bi-geo-alt-fill fs-4"></i>
                 </div>
                 <div>
@@ -43,7 +44,7 @@ export default function ContactUs() {
               </div>
 
               <div className="d-flex align-items-start gap-3 mb-4">
-                <div className="bg-success bg-opacity-10 text-success p-3 rounded-3">
+                <div className="bg-teal bg-opacity-10 text-teal p-3 rounded-3" style={{ background: 'rgba(13, 148, 136, 0.1)', color: '#0d9488' }}>
                   <i className="bi bi-envelope-fill fs-4"></i>
                 </div>
                 <div>
@@ -53,7 +54,7 @@ export default function ContactUs() {
               </div>
 
               <div className="d-flex align-items-start gap-3">
-                <div className="bg-info bg-opacity-10 text-info p-3 rounded-3">
+                <div className="bg-warning bg-opacity-10 text-dark p-3 rounded-3" style={{ background: 'rgba(234, 179, 8, 0.1)', color: '#eab308' }}>
                   <i className="bi bi-telephone-fill fs-4"></i>
                 </div>
                 <div>
@@ -66,10 +67,10 @@ export default function ContactUs() {
             <div className="border-top pt-4 mt-4">
               <h6 className="fw-bold mb-2">Social Channels</h6>
               <div className="d-flex gap-3">
-                <a href="#" className="btn btn-outline-secondary btn-sm rounded-circle"><i className="bi bi-facebook"></i></a>
-                <a href="#" className="btn btn-outline-secondary btn-sm rounded-circle"><i className="bi bi-instagram"></i></a>
-                <a href="#" className="btn btn-outline-secondary btn-sm rounded-circle"><i className="bi bi-twitter-x"></i></a>
-                <a href="#" className="btn btn-outline-secondary btn-sm rounded-circle"><i className="bi bi-youtube"></i></a>
+                <a href="#" className="btn btn-outline-success btn-sm rounded-circle"><i className="bi bi-facebook"></i></a>
+                <a href="#" className="btn btn-outline-success btn-sm rounded-circle"><i className="bi bi-instagram"></i></a>
+                <a href="#" className="btn btn-outline-success btn-sm rounded-circle"><i className="bi bi-twitter-x"></i></a>
+                <a href="#" className="btn btn-outline-success btn-sm rounded-circle"><i className="bi bi-youtube"></i></a>
               </div>
             </div>
           </div>
@@ -91,7 +92,7 @@ export default function ContactUs() {
                 <label className="form-label small fw-bold">Your Name</label>
                 <input 
                   type="text" 
-                  className="form-control rounded-3" 
+                  className="form-control rounded-3 border-light-subtle py-2 shadow-sm" 
                   value={name} 
                   onChange={(e) => setName(e.target.value)} 
                   required 
@@ -103,7 +104,7 @@ export default function ContactUs() {
                 <label className="form-label small fw-bold">Email Address</label>
                 <input 
                   type="email" 
-                  className="form-control rounded-3" 
+                  className="form-control rounded-3 border-light-subtle py-2 shadow-sm" 
                   value={email} 
                   onChange={(e) => setEmail(e.target.value)} 
                   required 
@@ -115,7 +116,7 @@ export default function ContactUs() {
                 <label className="form-label small fw-bold">Subject</label>
                 <input 
                   type="text" 
-                  className="form-control rounded-3" 
+                  className="form-control rounded-3 border-light-subtle py-2 shadow-sm" 
                   value={subject} 
                   onChange={(e) => setSubject(e.target.value)} 
                   required 
@@ -126,7 +127,7 @@ export default function ContactUs() {
               <div className="mb-3">
                 <label className="form-label small fw-bold">Your Message</label>
                 <textarea 
-                  className="form-control rounded-3" 
+                  className="form-control rounded-3 border-light-subtle shadow-sm" 
                   rows="4" 
                   value={message} 
                   onChange={(e) => setMessage(e.target.value)} 
@@ -135,7 +136,7 @@ export default function ContactUs() {
                 ></textarea>
               </div>
 
-              <button type="submit" className="btn btn-gradient w-100 py-2 fs-5 mt-2">
+              <button type="submit" className="btn btn-gradient w-100 py-2 btn-lg mt-2 shadow-sm">
                 Send Inquiry
               </button>
             </form>
