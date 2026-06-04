@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import logo from '../assets/logo.png';
 import waterfall from '../assets/waterfall.png';
+import guidImg from '../assets/guid.jpeg';
+
 
 const slides = [
   {
@@ -209,7 +211,7 @@ export default function Home({ onNavigate, currentUser }) {
             {/* Tour Guides */}
             <div className="bento-item medium" onClick={() => handleServiceClick(servicesList[2])} style={{ cursor: 'pointer' }}>
               <div className="bento-img-wrapper">
-                <img src="https://images.unsplash.com/photo-1544085311-11a028465b53?auto=format&fit=crop&w=600&q=80" alt="Guides" />
+                <img src={guidImg} alt="Guides" />
               </div>
               <div className="bento-overlay"></div>
               <div className="bento-content">

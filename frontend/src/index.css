@@ -264,7 +264,7 @@ body {
 }
 
 .companion-card-info-section {
-  width: 65%;
+  width: 100%;
   padding: 32px;
   display: flex;
   flex-direction: column;

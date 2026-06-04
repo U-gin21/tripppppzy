@@ -1036,3 +1036,11 @@ Body:
 <h2>Tripzy Password Reset</h2><p>Hello,</p><p>We received a request to reset the password for the Tripzy account associated with this email address.</p><p><strong>Verification Token:</strong></p><h3 style='letter-spacing: 0.15em;'>696081</h3><p>Enter this code in the verification form to confirm your identity.</p><p>If you did not request this change, please ignore this email.</p><p>Warm regards,<br>Tripzy Sri Lanka Team</p>
 ========================================
 
+========================================
+Timestamp: 2026-06-04 16:12:45
+To: testtourist@example.com
+Subject: Welcome to Tripzy Sri Lanka!
+Body:
+<h2>Hello Test Tourist,</h2><p>Thank you for registering on Tripzy - Smart Tourism Management and Booking System for Sri Lanka.</p><p>Your account is now active! You can log in and start using our platform.</p><p>Warm Regards,<br>The Tripzy Team</p>
+========================================
+

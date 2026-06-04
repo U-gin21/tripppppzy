@@ -22,6 +22,30 @@ session_set_cookie_params([
 ]);
 session_start();
 
+// Custom session inactivity timeout (e.g. 30 minutes = 1800 seconds)
+$inactivity_timeout = 1800;
+if (isset($_SESSION['user_id'])) {
+    if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity'] > $inactivity_timeout)) {
+        // Clear all session variables
+        $_SESSION = array();
+        // Expire the session cookie in the browser
+        if (ini_get("session.use_cookies")) {
+            $params = session_get_cookie_params();
+            setcookie(session_name(), '', time() - 42000,
+                $params["path"], $params["domain"],
+                $params["secure"], $params["httponly"]
+            );
+        }
+        // Destroy the server session
+        session_destroy();
+        // Start a fresh session for the current request
+        session_start();
+    } else {
+        // Update the last activity timestamp
+        $_SESSION['last_activity'] = time();
+    }
+}
+
 // CORS configuration for local React development support
 $allowed_origins = [
     'http://localhost:5173',
@@ -140,6 +164,7 @@ try {
                 $_SESSION['user_type'] = $user['user_type'];
                 $_SESSION['email'] = $user['email'];
                 $_SESSION['full_name'] = $user['full_name'];
+                $_SESSION['last_activity'] = time();
                 
                 $response = [
                     "success" => true,

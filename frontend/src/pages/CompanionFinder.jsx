@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
-import { apiRequest } from '../api';
+import { apiRequest, getUploadUrl } from '../api';
 
-export default function CompanionFinder({ currentUser }) {
+export default function CompanionFinder({ currentUser, onNavigate }) {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -191,23 +191,29 @@ export default function CompanionFinder({ currentUser }) {
   };
 
   return (
-    <div className="container py-5 animate-fade-in">
+    <div className="container py-5">
+      <div className="animate-fade-in">
       <div className="d-flex justify-content-between align-items-center mb-5 flex-wrap gap-3">
         <div>
           <h1 className="fw-bold text-gradient display-5">Travel Companion Finder</h1>
           <p className="text-muted mb-0">Don't travel alone. Find like-minded companions to explore Sri Lanka and share expenses.</p>
         </div>
-        {currentUser ? (
-          <button 
-            className="btn btn-gradient px-4 py-2 rounded-3 shadow" 
-            data-bs-toggle="modal" 
-            data-bs-target="#createPostModal"
-          >
-            <i className="bi bi-plus-circle-fill me-2"></i> Post Travel Plan
-          </button>
-        ) : (
-          <span className="text-muted small">Log in to post or join travel plans.</span>
-        )}
+        <button 
+          className="btn btn-gradient px-4 py-2 rounded-3 shadow" 
+          data-bs-toggle={currentUser ? "modal" : undefined} 
+          data-bs-target={currentUser ? "#createPostModal" : undefined}
+          onClick={() => {
+            if (!currentUser) {
+              if (onNavigate) {
+                onNavigate('auth');
+              } else {
+                alert("Please log in to post a travel plan.");
+              }
+            }
+          }}
+        >
+          <i className="bi bi-plus-circle-fill me-2"></i> Post Travel Plan
+        </button>
       </div>
 
       {msg.text && (
@@ -273,23 +279,17 @@ export default function CompanionFinder({ currentUser }) {
               destImage = "https://images.unsplash.com/photo-1588598130836-8e562c161ab8?auto=format&fit=crop&w=600&q=80";
             }
             
-            // Map owner genders to dynamic avatars to look realistic
-            const avatarUrl = post.owner_gender === 'female' 
-              ? "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80"
-              : "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&q=80";
+            // Use the actual profile photo if uploaded, otherwise use gender-based fallback
+            const avatarUrl = post.owner_photo && post.owner_photo !== 'default_profile.jpg'
+              ? getUploadUrl(post.owner_photo)
+              : (post.owner_gender === 'female' 
+                  ? "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80"
+                  : "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&q=80");
 
             return (
               <div className="col-12" key={post.id}>
                 <div className="horizontal-companion-card animate-fade-in">
-                  {/* Left Column: Image with overlay badge */}
-                  <div className="companion-card-image-section">
-                    <img src={destImage} alt={post.destination_place} />
-                    <span className="badge bg-success bg-opacity-95 position-absolute top-0 start-0 m-3 px-3 py-2 rounded-pill shadow-sm">
-                      Confirmed Trip
-                    </span>
-                  </div>
-
-                  {/* Right Column: User details, description and buttons */}
+                  {/* User details, description and buttons */}
                   <div className="companion-card-info-section">
                     <div>
                       <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
@@ -320,6 +320,9 @@ export default function CompanionFinder({ currentUser }) {
 
                       {/* Travel Date & Budget Badges */}
                       <div className="d-flex flex-wrap gap-2 mb-3">
+                        <span className="badge bg-success px-3 py-2 rounded-pill small">
+                          Confirmed Trip
+                        </span>
                         <span className="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill small">
                           <i className="bi bi-calendar-event me-1"></i> {post.start_date} to {post.end_date}
                         </span>
@@ -468,6 +471,8 @@ export default function CompanionFinder({ currentUser }) {
           </div>
         </>
       )}
+
+      </div>
 
       <div className="modal fade" id="createPostModal" tabIndex="-1" aria-hidden="true">
         <div className="modal-dialog modal-dialog-centered">

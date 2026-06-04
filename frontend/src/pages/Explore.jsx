@@ -86,7 +86,8 @@ export default function Explore() {
   };
 
   return (
-    <div className="container py-5 animate-fade-in">
+    <div className="container py-5">
+      <div className="animate-fade-in">
       <div className="text-center mb-5">
         <h1 className="fw-bold text-gradient display-4">Explore Sri Lanka</h1>
         <p className="text-muted lead">Search destinations by interest, district, and check real-time weather conditions instantly.</p>
@@ -184,6 +185,8 @@ export default function Explore() {
           <p className="text-muted">Try adjusting your filters or search keywords.</p>
         </div>
       )}
+
+      </div>
 
       {/* DETAIL & WEATHER MODAL */}
       <div className="modal fade" id="destinationModal" tabIndex="-1" aria-hidden="true">

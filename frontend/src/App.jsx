@@ -24,17 +24,45 @@ export default function App() {
       const res = await apiRequest('auth', 'me');
       if (res.success && res.user) {
         setCurrentUser(res.user);
+        localStorage.setItem('tripzy_logged_in', 'true');
+        sessionStorage.setItem('tripzy_session_active', 'true');
+      } else {
+        localStorage.removeItem('tripzy_logged_in');
       }
     } catch (err) {
       console.log('No active session:', err.message);
+      localStorage.removeItem('tripzy_logged_in');
     } finally {
       setLoading(false);
     }
   };
 
-  // Check active session on startup
+  // Check active session on startup with tab/browser closure detection
   useEffect(() => {
-    checkSession();
+    const initSession = async () => {
+      const loggedIn = localStorage.getItem('tripzy_logged_in');
+      const sessionActive = sessionStorage.getItem('tripzy_session_active');
+
+      if (loggedIn === 'true') {
+        if (sessionActive === 'true') {
+          await checkSession();
+        } else {
+          // User opened a new tab or restarted browser, clear old server session
+          try {
+            await apiRequest('auth', 'logout', 'POST');
+          } catch (err) {
+            console.log('Error clearing session:', err.message);
+          }
+          localStorage.removeItem('tripzy_logged_in');
+          sessionStorage.setItem('tripzy_session_active', 'true');
+          setLoading(false);
+        }
+      } else {
+        sessionStorage.setItem('tripzy_session_active', 'true');
+        setLoading(false);
+      }
+    };
+    initSession();
   }, []);
 
   useEffect(() => {
@@ -54,6 +82,8 @@ export default function App() {
     if (!window.confirm("Are you sure you want to log out?")) return;
     try {
       await apiRequest('auth', 'logout', 'POST');
+      localStorage.removeItem('tripzy_logged_in');
+      sessionStorage.removeItem('tripzy_session_active');
       setCurrentUser(null);
       setPage('home');
     } catch (err) {
@@ -142,14 +172,19 @@ export default function App() {
       <main style={{ minHeight: '80vh' }}>
         {page === 'home' && <Home onNavigate={navigate} currentUser={currentUser} />}
         {page === 'explore' && <Explore />}
-        {page === 'companions' && <CompanionFinder currentUser={currentUser} />}
+        {page === 'companions' && <CompanionFinder currentUser={currentUser} onNavigate={navigate} />}
         {page === 'about' && <AboutUs />}
         {page === 'faqs' && <FAQs />}
         {page === 'contact' && <ContactUs />}
         {page === 'auth' && (
           <Auth 
             initialMode={authMode} 
-            onLoginSuccess={(user) => { setCurrentUser(user); setPage('dashboard'); }} 
+            onLoginSuccess={(user) => { 
+              localStorage.setItem('tripzy_logged_in', 'true'); 
+              sessionStorage.setItem('tripzy_session_active', 'true'); 
+              setCurrentUser(user); 
+              setPage('dashboard'); 
+            }} 
           />
         )}
         {page === 'dashboard' && currentUser && (
