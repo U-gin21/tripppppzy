@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { apiRequest } from './api';
+import logo from './assets/logo.png';
 import Home from './pages/Home';
 import Explore from './pages/Explore';
 import AboutUs from './pages/AboutUs';
@@ -64,7 +65,8 @@ export default function App() {
     return (
       <div className="d-flex align-items-center justify-content-center min-vh-100 bg-light">
         <div className="text-center">
-          <div className="spinner-border text-primary mb-3" role="status" style={{ width: '3rem', height: '3rem' }}>
+          <img src={logo} alt="Tripzy Logo" className="animate-float mb-3" style={{ height: '80px', width: 'auto' }} />
+          <div className="spinner-border d-block mx-auto mb-3" role="status" style={{ width: '2.5rem', height: '2.5rem', color: 'var(--primary-color)' }}>
             <span className="visually-hidden">Loading Tripzy...</span>
           </div>
           <h5 className="fw-bold text-gradient">Tripzy Sri Lanka</h5>
@@ -80,7 +82,7 @@ export default function App() {
       <nav className="navbar navbar-expand-lg navbar-custom sticky-top py-3">
         <div className="container">
           <a className="navbar-brand fw-extrabold fs-3 text-gradient d-flex align-items-center gap-2" href="#" onClick={() => setPage('home')}>
-            <i className="bi bi-compass-fill"></i> Tripzy
+            <img src={logo} alt="Tripzy Logo" style={{ height: '35px', width: 'auto', objectFit: 'contain' }} /> Tripzy
           </a>
           <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span className="navbar-toggler-icon"></span>

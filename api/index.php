@@ -13,7 +13,7 @@ $cookieSameSite = $isHTTPS ? 'None' : 'Lax';
 $cookieSecure = $isHTTPS; // browsers require Secure flag for SameSite=None
 
 session_set_cookie_params([
-    'lifetime' => 86400,
+    'lifetime' => 0,
     'path' => '/',
     'secure' => $cookieSecure,
     'httponly' => true,

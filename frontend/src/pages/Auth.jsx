@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { apiRequest } from '../api';
+import logo from '../assets/logo.png';
 
 export default function Auth({ onLoginSuccess, initialMode = 'login' }) {
   const [isLogin, setIsLogin] = useState(true);
@@ -647,8 +648,9 @@ export default function Auth({ onLoginSuccess, initialMode = 'login' }) {
       <footer className="py-4 mt-5 border-top border-light-subtle" style={{ width: '100%', zIndex: 2, background: 'transparent' }}>
         <div className="container">
           <div className="row align-items-center justify-content-between g-3">
-            <div className="col-md-5 text-center text-md-start">
-              <span className="fw-bold fs-5 text-gradient me-2">Tripzy</span>
+            <div className="col-md-5 text-center text-md-start d-flex align-items-center justify-content-center justify-content-md-start gap-2">
+              <img src={logo} alt="Tripzy Logo" style={{ height: '30px', width: 'auto' }} />
+              <span className="fw-bold fs-5 text-gradient">Tripzy</span>
               <span className="text-muted small">&copy; {new Date().getFullYear()} Tripzy. All rights reserved.</span>
             </div>
             <div className="col-md-4 text-center">

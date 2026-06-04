@@ -1,4 +1,37 @@
+import { useState, useEffect } from 'react';
+import logo from '../assets/logo.png';
+import waterfall from '../assets/waterfall.png';
+
+const slides = [
+  {
+    image: "https://images.unsplash.com/photo-1546708973-b339540b5162?auto=format&fit=crop&w=1600&q=80",
+    badge: "🌴 AYUBOWAN - WELCOME TO SRI LANKA",
+    headline: "Explore Sri Lanka's Natural Beauty",
+    description: "Plan your complete itinerary with Tripzy. Secure offline payments, dynamic weather forecasts, certified local guides, and shared travel groups."
+  },
+  {
+    image: waterfall,
+    badge: "⛰️ ELLA HIGHLANDS - SCENIC VISTAS",
+    headline: "Journey Through Misty Tea Fields & Waterfalls",
+    description: "Connect with certified local guides for hikes on the famous Nine Arches Bridge, Ella Rock, and Adams Peak."
+  },
+  {
+    image: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80",
+    badge: "🌊 SOUTHERN BEACHES - SUN & SURF",
+    headline: "Relax Along Golden Tropical Shores",
+    description: "Find travel companions, rent surfing gear, and secure beachfront resort bookings with easy offline payments."
+  }
+];
+
 export default function Home({ onNavigate, currentUser }) {
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % slides.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
   const testimonials = [
     { name: "Sarah Miller", text: "The hotel booking and companion system was incredibly easy to use. Highly recommended for solo travelers!", location: "United Kingdom" },
     { name: "Suresh Perera", text: "Registered my vehicle hiring business on Tripzy. Within days, I had multiple bookings from international tourists.", location: "Colombo, Sri Lanka" },
@@ -29,14 +62,41 @@ export default function Home({ onNavigate, currentUser }) {
   return (
     <div className="animate-fade-in">
       {/* HERO SECTION */}
-      <section className="hero-section text-center py-5 d-flex align-items-center justify-content-center flex-column" style={{ minHeight: '65vh' }}>
-        <div className="hero-gradient-overlay"></div>
-        <div className="container position-relative z-1">
-          <span className="badge bg-success rounded-pill px-3 py-2 mb-3">🌴 AYUBOWAN - WELCOME TO SRI LANKA</span>
-          <h1 className="display-3 fw-bold text-white mb-3">Explore Sri Lanka's Natural Beauty</h1>
-          <p className="lead text-white-50 col-md-8 mx-auto mb-4">
-            Plan your complete itinerary with Tripzy. Secure offline payments, dynamic weather forecasts, certified local guides, and shared travel groups.
-          </p>
+      <section className="hero-section text-center d-flex align-items-center justify-content-center flex-column" style={{ minHeight: '80vh', position: 'relative', overflow: 'hidden' }}>
+        {/* Slideshow background layers */}
+        {slides.map((slide, idx) => (
+          <div
+            key={idx}
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundImage: `linear-gradient(rgba(2, 44, 34, 0.65), rgba(15, 23, 42, 0.35)), url(${slide.image})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              opacity: idx === currentSlide ? 1 : 0,
+              transition: 'opacity 1.5s ease-in-out',
+              zIndex: 0
+            }}
+          />
+        ))}
+
+        <div className="hero-gradient-overlay" style={{ zIndex: 1 }}></div>
+
+        <div className="container position-relative z-3 text-white">
+          <div key={currentSlide} className="d-flex flex-column align-items-center">
+            <span className="badge bg-success rounded-pill px-3 py-2 mb-3 animate-text-reveal" style={{ animationDelay: '0ms', opacity: 0 }}>
+              {slides[currentSlide].badge}
+            </span>
+            <h1 className="display-3 fw-bold text-white mb-3 animate-text-reveal" style={{ textShadow: '0 2px 10px rgba(0,0,0,0.3)', animationDelay: '150ms', opacity: 0 }}>
+              {slides[currentSlide].headline}
+            </h1>
+            <p className="lead text-white-50 col-md-8 mx-auto mb-4 animate-text-reveal" style={{ textShadow: '0 1px 5px rgba(0,0,0,0.3)', animationDelay: '300ms', opacity: 0 }}>
+              {slides[currentSlide].description}
+            </p>
+          </div>
           <div className="d-flex justify-content-center gap-3">
             <button className="btn btn-gradient btn-lg rounded-pill px-4" onClick={() => onNavigate('explore')}>
               Explore Destinations
@@ -45,6 +105,24 @@ export default function Home({ onNavigate, currentUser }) {
               Find Travel Companions
             </button>
           </div>
+        </div>
+
+        {/* Slideshow indicators */}
+        <div className="position-absolute bottom-0 start-50 translate-middle-x mb-4 d-flex gap-2" style={{ zIndex: 10 }}>
+          {slides.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={() => setCurrentSlide(idx)}
+              className="rounded-circle border-0"
+              style={{
+                width: '12px',
+                height: '12px',
+                backgroundColor: idx === currentSlide ? '#fff' : 'rgba(255, 255, 255, 0.4)',
+                transition: 'all 0.3s ease',
+                cursor: 'pointer'
+              }}
+            />
+          ))}
         </div>
       </section>
 
@@ -243,9 +321,9 @@ export default function Home({ onNavigate, currentUser }) {
                 <p className="text-muted italic">"Tripzy made our honeymoon in Ella absolutely magical. The villa they recommended had the most breathtaking view of the Nine Arches Bridge!"</p>
               </div>
               <div className="d-flex align-items-center gap-3 mt-3">
-                <img 
-                  src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&q=80" 
-                  alt="Sarah Miller" 
+                <img
+                  src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&q=80"
+                  alt="Sarah Miller"
                   className="rounded-circle border border-2 border-emerald"
                   style={{ width: '45px', height: '45px', objectFit: 'cover' }}
                 />
@@ -269,9 +347,9 @@ export default function Home({ onNavigate, currentUser }) {
                 <p className="text-muted italic">"Professional from start to finish. The vehicle we rented was pristine and our driver knew all the best local spots for authentic Kottu!"</p>
               </div>
               <div className="d-flex align-items-center gap-3 mt-3">
-                <img 
-                  src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100&q=80" 
-                  alt="David Chen" 
+                <img
+                  src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100&q=80"
+                  alt="David Chen"
                   className="rounded-circle border border-2 border-emerald"
                   style={{ width: '45px', height: '45px', objectFit: 'cover' }}
                 />
@@ -295,9 +373,9 @@ export default function Home({ onNavigate, currentUser }) {
                 <p className="text-muted italic">"Renting camping gear through Tripzy for our trek in Yala was so easy. High-quality equipment that kept us safe and comfortable."</p>
               </div>
               <div className="d-flex align-items-center gap-3 mt-3">
-                <img 
-                  src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80" 
-                  alt="Elena Rodriguez" 
+                <img
+                  src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80"
+                  alt="Elena Rodriguez"
                   className="rounded-circle border border-2 border-emerald"
                   style={{ width: '45px', height: '45px', objectFit: 'cover' }}
                 />
@@ -316,7 +394,10 @@ export default function Home({ onNavigate, currentUser }) {
         <div className="container">
           <div className="row g-4 mb-4">
             <div className="col-lg-4">
-              <h4 className="fw-bold text-gradient">Tripzy Sri Lanka</h4>
+              <div className="d-flex align-items-center gap-2 mb-2">
+                <img src={logo} alt="Tripzy Logo" style={{ height: '40px', width: 'auto' }} />
+                <h4 className="fw-bold text-gradient mb-0">Tripzy Sri Lanka</h4>
+              </div>
               <p className="text-muted small mt-2">
                 A centralized digital tourism management and booking ecosystem designed to boost local entrepreneurship and traveler safety in Sri Lanka.
               </p>
