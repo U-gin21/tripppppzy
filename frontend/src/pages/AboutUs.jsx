@@ -1,16 +1,17 @@
 import React from 'react';
+import PageHero from '../components/PageHero';
 
 export default function AboutUs() {
   return (
-    <div className="container py-5 animate-fade-in">
-      {/* Hero Section */}
-      <div className="text-center mb-5">
-        <span className="badge bg-success rounded-pill px-3 py-2 mb-3 text-uppercase">Who We Are</span>
-        <h1 className="fw-bold text-gradient display-4">Discover the Soul of Sri Lanka</h1>
-        <p className="lead text-muted col-lg-8 mx-auto mt-2">
-          We are dedicated to bringing the Pearl of the Indian Ocean closer to your fingertips through a centralized, intelligent, and seamless booking experience.
-        </p>
-      </div>
+    <div className="animate-fade-in">
+      <PageHero 
+        title="Discover the Soul of Sri Lanka"
+        subtitle="We are dedicated to bringing the Pearl of the Indian Ocean closer to your fingertips through a centralized, intelligent, and seamless booking experience."
+        badge="Who We Are"
+        backgroundImage="https://images.unsplash.com/photo-1544085311-11a028465b53?auto=format&fit=crop&w=1600&q=80"
+      />
+
+      <div className="container pb-5">
 
       {/* Visual / Introduction */}
       <div className="row align-items-center mb-5 g-5">
@@ -28,11 +29,10 @@ export default function AboutUs() {
         <div className="col-lg-6">
           <h2 className="fw-bold mb-3 text-gradient">Smart Travel Redefined</h2>
           <p className="text-muted mb-3">
-            Tripzy is a state-of-the-art travel assistant portal designed to satisfy every aspect of Sri Lankan tourism. Whether you want to explore ancient ruins, hike through misty tea fields, surf on tropical beaches, or camp in deep wildlife reserves, we coordinate it all under one dashboard.
+Founded in 2026, Tripzy was created to simplify tourism in Sri Lanka through a single smart platform. We bring together hotel booking, vehicle rental, tour guide services, camping tool rental, destination discovery, weather information, and travel companion features to make travel planning easier and more convenient. Our goal is to enhance the tourism experience by connecting travelers with the services they need in one place
           </p>
           <p className="text-muted mb-4">
-            We empower local hospitality and travel companies (Hotel Providers, Vehicle Renters, Local Tour Guides, and Camping Gear Providers) by offering them a direct channel to connect with global and local tourists. Our core mission is to promote sustainable, easy, and affordable travel across Sri Lanka.
-          </p>
+Driven by innovation and a passion for tourism, Tripzy aims to create a seamless travel experience for both local and international travelers. Our platform is designed to provide convenience, accessibility, and reliable information, helping users explore the beauty of Sri Lanka with confidence.          </p>
           
           <div className="row g-3">
             <div className="col-6">
@@ -98,6 +98,7 @@ export default function AboutUs() {
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 }

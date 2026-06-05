@@ -32,7 +32,6 @@ export default function Auth({ onLoginSuccess, initialMode = 'login' }) {
   const [otpVerified, setOtpVerified] = useState(false);
 
   // UI States
-  const [msg, setMsg] = useState({ type: '', text: '' });
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -56,18 +55,17 @@ export default function Auth({ onLoginSuccess, initialMode = 'login' }) {
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setMsg({ type: '', text: '' });
     try {
       const res = await apiRequest('auth', 'login', 'POST', {
         email: loginEmail,
         password: loginPassword
       });
-      setMsg({ type: 'success', text: res.message });
+      alert(res.message);
       setTimeout(() => {
         onLoginSuccess(res.user);
       }, 1000);
     } catch (err) {
-      setMsg({ type: 'danger', text: err.message });
+      alert(err.message);
     } finally {
       setLoading(false);
     }
@@ -76,22 +74,21 @@ export default function Auth({ onLoginSuccess, initialMode = 'login' }) {
   const handleRegister = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setMsg({ type: '', text: '' });
 
     if (password !== confirmPassword) {
-      setMsg({ type: 'danger', text: 'Passwords do not match.' });
+      alert('Passwords do not match.');
       setLoading(false);
       return;
     }
 
     if (!gender) {
-      setMsg({ type: 'danger', text: 'Please select your gender.' });
+      alert('Please select your gender.');
       setLoading(false);
       return;
     }
 
     if (!agreeToTerms) {
-      setMsg({ type: 'danger', text: 'You must agree to the Terms of Service & Privacy Policy.' });
+      alert('You must agree to the Terms of Service & Privacy Policy.');
       setLoading(false);
       return;
     }
@@ -99,7 +96,7 @@ export default function Auth({ onLoginSuccess, initialMode = 'login' }) {
     // Validate age
     const age = calculateAge(dob);
     if (age < 18) {
-      setMsg({ type: 'danger', text: 'Registration restricted: You must be at least 18 years old.' });
+      alert('Registration restricted: You must be at least 18 years old.');
       setLoading(false);
       return;
     }
@@ -129,13 +126,12 @@ export default function Auth({ onLoginSuccess, initialMode = 'login' }) {
       }
 
       const res = await apiRequest('auth', 'register', 'POST', formData);
-      setMsg({ type: 'success', text: res.message + ' Please log in now.' });
+      alert(res.message + ' Please log in now.');
       setTimeout(() => {
         setIsLogin(true);
-        setMsg({ type: '', text: '' });
       }, 3000);
     } catch (err) {
-      setMsg({ type: 'danger', text: err.message });
+      alert(err.message);
     } finally {
       setLoading(false);
     }
@@ -144,17 +140,16 @@ export default function Auth({ onLoginSuccess, initialMode = 'login' }) {
   const handleForgotPassword = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setMsg({ type: '', text: '' });
     try {
       const res = await apiRequest('auth', 'forgot_password', 'POST', { email: resetEmail });
-      setMsg({ type: 'success', text: res.message });
+      alert(res.message);
       setVerifyMode(true);
       setForgotMode(false);
       setResetMode(false);
       setOtpVerified(false);
       setResetToken('');
     } catch (err) {
-      setMsg({ type: 'danger', text: err.message });
+      alert(err.message);
     } finally {
       setLoading(false);
     }
@@ -163,16 +158,15 @@ export default function Auth({ onLoginSuccess, initialMode = 'login' }) {
   const handleVerifyToken = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setMsg({ type: '', text: '' });
     try {
       const res = await apiRequest('auth', 'verify_reset_token', 'POST', { token: resetToken });
-      setMsg({ type: 'success', text: res.message });
+      alert(res.message);
       setVerifyMode(false);
       setResetMode(true);
       setOtpVerified(true);
       setResetToken('');
     } catch (err) {
-      setMsg({ type: 'danger', text: err.message });
+      alert(err.message);
     } finally {
       setLoading(false);
     }
@@ -181,7 +175,6 @@ export default function Auth({ onLoginSuccess, initialMode = 'login' }) {
   const handleResetPassword = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setMsg({ type: '', text: '' });
     try {
       if (!otpVerified) {
         throw new Error('Please verify your OTP before resetting your password.');
@@ -189,14 +182,13 @@ export default function Auth({ onLoginSuccess, initialMode = 'login' }) {
       const res = await apiRequest('auth', 'reset_password', 'POST', {
         password: newPassword
       });
-      setMsg({ type: 'success', text: res.message });
+      alert(res.message);
       setTimeout(() => {
         setResetMode(false);
         setIsLogin(true);
-        setMsg({ type: '', text: '' });
       }, 2000);
     } catch (err) {
-      setMsg({ type: 'danger', text: err.message });
+      alert(err.message);
     } finally {
       setLoading(false);
     }
@@ -213,11 +205,7 @@ export default function Auth({ onLoginSuccess, initialMode = 'login' }) {
           <div className={isLogin || forgotMode || resetMode || verifyMode ? "col-12 col-md-6 col-lg-5" : "col-12 col-lg-9 col-xl-8"}>
             <div className="card auth-form-card p-4 p-md-5 border-0 animate-fade-in">
               
-              {msg.text && (
-                <div className={`alert alert-${msg.type} text-center py-2 mb-4`} role="alert" style={{ fontSize: '14px' }}>
-                  {msg.text}
-                </div>
-              )}
+
 
               {/* FORGOT PASSWORD SECTION */}
               {forgotMode && (

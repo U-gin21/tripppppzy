@@ -488,6 +488,10 @@ try {
         } elseif ($action === 'tourist_list') {
             $data = $bookingModel->getByTouristId($_SESSION['user_id']);
             $response = ["success" => true, "bookings" => $data];
+        } elseif ($action === 'service_bookings') {
+            $serviceId = $_GET['service_id'] ?? 0;
+            $data = $bookingModel->getByServiceId($serviceId);
+            $response = ["success" => true, "bookings" => $data];
         } elseif ($action === 'provider_list') {
             if ($_SESSION['user_type'] !== 'provider') {
                 throw new Exception("Access denied.");

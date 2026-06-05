@@ -1,31 +1,31 @@
 import React, { useState } from 'react';
+import PageHero from '../components/PageHero';
 
 export default function ContactUs() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
-  const [submitted, setSubmitted] = useState(false);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    setSubmitted(true);
+    alert('Thank you! Your message was submitted successfully.');
     setName('');
     setEmail('');
     setSubject('');
     setMessage('');
-    setTimeout(() => {
-      setSubmitted(false);
-    }, 4000);
   };
 
   return (
-    <div className="container py-5 animate-fade-in">
-      <div className="text-center mb-5">
-        <span className="badge bg-success rounded-pill px-3 py-2 mb-3 text-uppercase">Support & Inquiries</span>
-        <h1 className="fw-bold text-gradient display-4">Contact Us</h1>
-        <p className="text-muted lead col-md-6 mx-auto mt-2">Have inquiries or need assistance? Reach out to the Tripzy team.</p>
-      </div>
+    <div className="animate-fade-in">
+      <PageHero 
+        title="Contact Us"
+        subtitle="Have inquiries or need assistance? Reach out to the Tripzy team. We're here to help you."
+        badge="Support & Inquiries"
+        backgroundImage="https://images.unsplash.com/photo-1534536281715-e28d76689b4d?auto=format&fit=crop&w=1600&q=80"
+      />
+
+      <div className="container pb-5">
 
       <div className="row g-5 justify-content-center">
         {/* Info Grid */}
@@ -59,7 +59,7 @@ export default function ContactUs() {
                 </div>
                 <div>
                   <h6 className="fw-bold mb-1">Call Support</h6>
-                  <p className="text-muted small mb-0">+94 11 234 5678 / +94 77 123 4567</p>
+                  <p className="text-muted small mb-0">+94 743571412</p>
                 </div>
               </div>
             </div>
@@ -80,12 +80,6 @@ export default function ContactUs() {
         <div className="col-lg-6">
           <div className="card glass-card p-4 border-0">
             <h4 className="fw-bold mb-4 text-gradient">Send a Message</h4>
-            
-            {submitted && (
-              <div className="alert alert-success animate-fade-in py-2 text-center" role="alert">
-                <i className="bi bi-patch-check-fill me-2"></i> Thank you! Your message was submitted successfully.
-              </div>
-            )}
 
             <form onSubmit={handleSubmit}>
               <div className="mb-3">
@@ -143,6 +137,7 @@ export default function ContactUs() {
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 }

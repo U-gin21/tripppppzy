@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { apiRequest, getUploadUrl } from '../api';
+import PageHero from '../components/PageHero';
 
 export default function Explore() {
   const [destinations, setDestinations] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+
   // Search Filters
   const [query, setQuery] = useState('');
   const [district, setDistrict] = useState('');
@@ -18,20 +19,36 @@ export default function Explore() {
 
   // Interest Categories
   const interests = [
-    'Beaches', 'Mountains', 'Camping', 'Wildlife', 
+    'Beaches', 'Mountains', 'Camping', 'Wildlife',
     'Historical places', 'Adventure', 'Nature', 'Cultural destinations'
   ];
 
   // Sri Lankan Districts list
   const districts = [
-    'Colombo', 'Gampaha', 'Kalutara', 'Kandy', 'Matale', 'Nuwara Eliya', 
-    'Galle', 'Matara', 'Hambantota', 'Jaffna', 'Kilinochchi', 'Mannar', 
-    'Vavuniya', 'Mullaitivu', 'Batticaloa', 'Ampara', 'Trincomalee', 
-    'Kurunegala', 'Puttalam', 'Anuradhapura', 'Polonnaruwa', 'Badulla', 
+    'Colombo', 'Gampaha', 'Kalutara', 'Kandy', 'Matale', 'Nuwara Eliya',
+    'Galle', 'Matara', 'Hambantota', 'Jaffna', 'Kilinochchi', 'Mannar',
+    'Vavuniya', 'Mullaitivu', 'Batticaloa', 'Ampara', 'Trincomalee',
+    'Kurunegala', 'Puttalam', 'Anuradhapura', 'Polonnaruwa', 'Badulla',
     'Moneragala', 'Ratnapura', 'Kegalle'
   ];
 
+  const getDestinationImage = (image) => {
+    const fallback = 'https://images.unsplash.com/photo-1588598130836-8e562c161ab8?auto=format&fit=crop&w=600&q=80';
+    if (!image || typeof image !== 'string') return fallback;
+    if (image.startsWith('http')) return image;
+    if (image.startsWith('/')) return `${window.location.origin}${image}`;
+    return `${window.location.origin}/TRIPZY%20FINAL/${image}`;
+  };
+
+  const getDescriptionPreview = (description) => {
+    if (!description || typeof description !== 'string') {
+      return 'No description available.';
+    }
+    return description.length > 120 ? `${description.substring(0, 120)}...` : description;
+  };
+
   useEffect(() => {
+    setLoading(true);
     fetchDestinations();
   }, [query, district, interest, budget]);
 
@@ -73,7 +90,7 @@ export default function Explore() {
   const getWeatherRecommendation = (currentRain, dailyData) => {
     if (!dailyData) return '';
     const totalRainWeek = dailyData.rain_sum.reduce((a, b) => a + b, 0);
-    
+
     if (totalRainWeek === 0) {
       return "☀️ Excellent time to visit! Dry and clear skies predicted for the next 7 days.";
     } else if (totalRainWeek < 15) {
@@ -86,105 +103,108 @@ export default function Explore() {
   };
 
   return (
-    <div className="container py-5">
-      <div className="animate-fade-in">
-      <div className="text-center mb-5">
-        <h1 className="fw-bold text-gradient display-4">Explore Sri Lanka</h1>
-        <p className="text-muted lead">Search destinations by interest, district, and check real-time weather conditions instantly.</p>
-      </div>
-
-      {/* FILTER PANEL */}
-      <div className="card glass-card p-4 border-0 mb-5">
-        <div className="row g-3">
-          <div className="col-md-3">
-            <label className="form-label small fw-bold">Search Keywords</label>
-            <input 
-              type="text" 
-              className="form-control rounded-3 border-light-subtle shadow-sm py-2" 
-              placeholder="e.g. Ella, Mirissa..." 
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-            />
-          </div>
-          <div className="col-md-3">
-            <label className="form-label small fw-bold">Select District</label>
-            <select className="form-select rounded-3 border-light-subtle shadow-sm py-2" value={district} onChange={(e) => setDistrict(e.target.value)}>
-              <option value="">All Districts</option>
-              {districts.map(d => <option key={d} value={d}>{d}</option>)}
-            </select>
-          </div>
-          <div className="col-md-3">
-            <label className="form-label small fw-bold">Interest Category</label>
-            <select className="form-select rounded-3 border-light-subtle shadow-sm py-2" value={interest} onChange={(e) => setInterest(e.target.value)}>
-              <option value="">All Interests</option>
-              {interests.map(i => <option key={i} value={i}>{i}</option>)}
-            </select>
-          </div>
-          <div className="col-md-3">
-            <label className="form-label small fw-bold">Budget Category</label>
-            <select className="form-select rounded-3 border-light-subtle shadow-sm py-2" value={budget} onChange={(e) => setBudget(e.target.value)}>
-              <option value="">Any Budget</option>
-              <option value="budget">Budget-Friendly</option>
-              <option value="mid-range">Mid-Range</option>
-              <option value="luxury">Premium / Luxury</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      {/* DESTINATION LISTINGS */}
-      {loading ? (
-        <div className="text-center py-5">
-          <div className="spinner-border text-emerald" role="status">
-            <span className="visually-hidden">Loading...</span>
+    <div className="animate-fade-in">
+      <PageHero
+        title="Explore Sri Lanka"
+        subtitle="Search destinations by interest, district, and check real-time weather conditions instantly."
+        badge="Wanderlust Sri Lanka"
+        backgroundImage="https://images.unsplash.com/photo-1546708973-b339540b5162?auto=format&fit=crop&w=1600&q=80"
+      >
+        {/* FILTER PANEL */}
+        <div className="p-4 mt-4 text-white rounded-4 shadow-lg animate-fade-in" style={{ background: 'rgba(255, 255, 255, 0.08)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255, 255, 255, 0.15)' }}>
+          <div className="row g-3">
+            <div className="col-md-3">
+              <label className="form-label small fw-bold">Search Keywords</label>
+              <input
+                type="text"
+                className="form-control rounded-3 transparent-hero-input shadow-sm py-2"
+                placeholder="e.g. Ella, Mirissa..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+              />
+            </div>
+            <div className="col-md-3">
+              <label className="form-label small fw-bold">Select District</label>
+              <select className="form-select rounded-3 transparent-hero-input shadow-sm py-2" value={district} onChange={(e) => setDistrict(e.target.value)}>
+                <option value="">All Districts</option>
+                {districts.map(d => <option key={d} value={d}>{d}</option>)}
+              </select>
+            </div>
+            <div className="col-md-3">
+              <label className="form-label small fw-bold">Interest Category</label>
+              <select className="form-select rounded-3 transparent-hero-input shadow-sm py-2" value={interest} onChange={(e) => setInterest(e.target.value)}>
+                <option value="">All Interests</option>
+                {interests.map(i => <option key={i} value={i}>{i}</option>)}
+              </select>
+            </div>
+            <div className="col-md-3">
+              <label className="form-label small fw-bold">Budget Category</label>
+              <select className="form-select rounded-3 transparent-hero-input shadow-sm py-2" value={budget} onChange={(e) => setBudget(e.target.value)}>
+                <option value="">Any Budget</option>
+                <option value="budget">Budget-Friendly</option>
+                <option value="mid-range">Mid-Range</option>
+                <option value="luxury">Premium / Luxury</option>
+              </select>
+            </div>
           </div>
         </div>
-      ) : destinations.length > 0 ? (
-        <div className="row g-4">
-          {destinations.map((dest) => (
-            <div className="col-md-6 col-lg-4" key={dest.id}>
-              <div 
-                className="card glass-card h-100 border-0 overflow-hidden cursor-pointer"
-                onClick={() => handleDestinationClick(dest)}
-                style={{ cursor: 'pointer' }}
-                data-bs-toggle="modal"
-                data-bs-target="#destinationModal"
-              >
-                <div style={{ height: '220px', overflow: 'hidden', position: 'relative' }}>
-                  <img 
-                    src={dest.image.startsWith('http') ? dest.image : `https://images.unsplash.com/photo-1588598130836-8e562c161ab8?auto=format&fit=crop&w=600&q=80`} 
-                    alt={dest.name} 
-                    className="w-100 h-100 object-fit-cover transition"
-                    style={{ objectFit: 'cover', transition: 'transform 0.5s ease' }}
-                    onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-                    onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
-                  />
-                  <span className="badge bg-success bg-opacity-95 position-absolute top-0 end-0 m-3 px-3 py-2 rounded-pill shadow-sm">
-                    {dest.interest_category}
-                  </span>
-                </div>
-                <div className="card-body p-4 d-flex flex-column justify-content-between">
-                  <div>
-                    <span className="text-emerald small fw-bold text-uppercase"><i className="bi bi-geo-alt-fill"></i> {dest.district} District</span>
-                    <h4 className="fw-bold mt-1 text-gradient">{dest.name}</h4>
-                    <p className="text-muted small line-clamp-3 mb-0">{dest.description.substring(0, 120)}...</p>
+      </PageHero>
+
+      <div className="container py-5">
+
+        {/* DESTINATION LISTINGS */}
+        {loading ? (
+          <div className="text-center py-5">
+            <div className="spinner-border text-emerald" role="status">
+              <span className="visually-hidden">Loading...</span>
+            </div>
+          </div>
+        ) : destinations.length > 0 ? (
+          <div className="row g-4">
+            {destinations.map((dest) => (
+              <div className="col-md-6 col-lg-4" key={dest.id}>
+                <div
+                  className="card glass-card h-100 border-0 overflow-hidden cursor-pointer"
+                  onClick={() => handleDestinationClick(dest)}
+                  style={{ cursor: 'pointer' }}
+                  data-bs-toggle="modal"
+                  data-bs-target="#destinationModal"
+                >
+                  <div style={{ height: '220px', overflow: 'hidden', position: 'relative' }}>
+                    <img
+                      src={getDestinationImage(dest.image)}
+                      alt={dest.name || 'Destination'}
+                      className="w-100 h-100 object-fit-cover transition"
+                      style={{ objectFit: 'cover', transition: 'transform 0.5s ease' }}
+                      onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+                      onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                    />
+                    <span className="badge bg-success bg-opacity-95 position-absolute top-0 end-0 m-3 px-3 py-2 rounded-pill shadow-sm">
+                      {dest.interest_category}
+                    </span>
                   </div>
-                  <div className="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
-                    <span className="badge bg-secondary bg-opacity-10 text-dark text-capitalize px-3 py-2">{dest.budget_category}</span>
-                    <button className="btn btn-outline-gradient btn-sm rounded-pill px-3">View Details & Weather</button>
+                  <div className="card-body p-4 d-flex flex-column justify-content-between">
+                    <div>
+                      <span className="text-emerald small fw-bold text-uppercase"><i className="bi bi-geo-alt-fill"></i> {dest.district} District</span>
+                      <h4 className="fw-bold mt-1 text-gradient">{dest.name}</h4>
+                      <p className="text-muted small line-clamp-3 mb-0">{getDescriptionPreview(dest.description)}</p>
+                    </div>
+                    <div className="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+                      <span className="badge bg-secondary bg-opacity-10 text-dark text-capitalize px-3 py-2">{dest.budget_category}</span>
+                      <button className="btn btn-outline-gradient btn-sm rounded-pill px-3">View Details & Weather</button>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-5 card glass-card border-0">
-          <i className="bi bi-compass fs-1 text-muted"></i>
-          <h4 className="fw-bold mt-3">No Destinations Found</h4>
-          <p className="text-muted">Try adjusting your filters or search keywords.</p>
-        </div>
-      )}
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-5 card glass-card border-0">
+            <i className="bi bi-compass fs-1 text-muted"></i>
+            <h4 className="fw-bold mt-3">No Destinations Found</h4>
+            <p className="text-muted">Try adjusting your filters or search keywords.</p>
+          </div>
+        )}
 
       </div>
 
@@ -201,9 +221,9 @@ export default function Explore() {
                 <div className="modal-body p-4">
                   <div className="row g-4">
                     <div className="col-md-6">
-                      <img 
-                        src={selectedDest.image.startsWith('http') ? selectedDest.image : `https://images.unsplash.com/photo-1588598130836-8e562c161ab8?auto=format&fit=crop&w=800&q=80`} 
-                        alt={selectedDest.name} 
+                      <img
+                        src={getDestinationImage(selectedDest.image)}
+                        alt={selectedDest.name || 'Destination'}
                         className="w-100 rounded-4 object-fit-cover shadow-sm border"
                         style={{ maxHeight: '250px', objectFit: 'cover' }}
                       />
@@ -214,13 +234,13 @@ export default function Explore() {
                       <h5 className="fw-bold mt-4 text-gradient"><i className="bi bi-activity"></i> Key Activities</h5>
                       <p className="text-muted small">{selectedDest.activities}</p>
                       <h5 className="fw-bold mt-3 text-gradient"><i className="bi bi-card-text"></i> About</h5>
-                      <p className="text-muted small">{selectedDest.description}</p>
+                      <p className="text-muted small">{selectedDest.description || 'No destination details are available at the moment.'}</p>
                     </div>
 
                     <div className="col-md-6">
                       <div className="card border-0 bg-light p-4 rounded-4 h-100 shadow-sm border border-emerald border-opacity-10">
                         <h4 className="fw-bold mb-3 text-gradient"><i className="bi bi-cloud-sun text-emerald"></i> Climate & Weather Forecast</h4>
-                        
+
                         {weatherLoading && (
                           <div className="text-center py-4">
                             <div className="spinner-border text-teal" role="status">
@@ -230,7 +250,7 @@ export default function Explore() {
                           </div>
                         )}
 
-                        {weatherData && !weatherLoading && (
+                        {weatherData && weatherData.current && weatherData.daily && !weatherLoading ? (
                           <div>
                             <div className="weather-widget mb-3 text-center">
                               <span className="badge bg-white bg-opacity-20 rounded-pill px-3 py-1 mb-2 text-uppercase small" style={{ letterSpacing: '1px' }}>Current Weather</span>
@@ -248,17 +268,17 @@ export default function Explore() {
 
                             <h6 className="fw-bold mb-3 mt-4 text-secondary text-uppercase" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>7-Day Prediction</h6>
                             <div className="row g-2">
-                              {weatherData.daily.time.slice(0, 7).map((day, idx) => {
+                              {(weatherData.daily.time || []).slice(0, 7).map((day, idx) => {
                                 const date = new Date(day);
                                 const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
                                 return (
-                                  <div className="col-3 text-center" key={day}>
+                                  <div className="col-3 text-center" key={day || idx}>
                                     <div className="forecast-item bg-white border border-light shadow-sm rounded-3 p-2">
                                       <span className="d-block fw-bold text-muted mb-1" style={{ fontSize: '10px' }}>{dayName}</span>
-                                      <span className="d-block fw-bold text-dark fs-6">{Math.round(weatherData.daily.temperature_2m_max[idx])}°</span>
-                                      <span className="text-muted d-block" style={{ fontSize: '10px' }}>{Math.round(weatherData.daily.temperature_2m_min[idx])}°</span>
+                                      <span className="d-block fw-bold text-dark fs-6">{Math.round(weatherData.daily.temperature_2m_max[idx] || 0)}°</span>
+                                      <span className="text-muted d-block" style={{ fontSize: '10px' }}>{Math.round(weatherData.daily.temperature_2m_min[idx] || 0)}°</span>
                                       <span className="d-block text-emerald mt-1 fw-bold" style={{ fontSize: '10px' }}>
-                                        {weatherData.daily.rain_sum[idx] > 0 ? `🌧️ ${weatherData.daily.rain_sum[idx]}mm` : "☀️"}
+                                        {(weatherData.daily.rain_sum[idx] || 0) > 0 ? `🌧️ ${weatherData.daily.rain_sum[idx]}mm` : "☀️"}
                                       </span>
                                     </div>
                                   </div>
@@ -266,7 +286,11 @@ export default function Explore() {
                               })}
                             </div>
                           </div>
-                        )}
+                        ) : weatherData && !weatherLoading ? (
+                          <div className="text-center py-4 text-muted">
+                            Weather data is not available right now.
+                          </div>
+                        ) : null}
                       </div>
                     </div>
                   </div>

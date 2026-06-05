@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { apiRequest } from '../api';
+import PageHero from '../components/PageHero';
 
 export default function FAQs() {
   const [faqs, setFaqs] = useState([]);
@@ -27,27 +28,34 @@ export default function FAQs() {
   );
 
   return (
-    <div className="container py-5 animate-fade-in">
-      <div className="text-center mb-5">
-        <span className="badge bg-success rounded-pill px-3 py-2 mb-3 text-uppercase">Help Center</span>
-        <h1 className="fw-bold text-gradient display-4">What can we help?</h1>
-        <p className="text-muted lead col-md-6 mx-auto">Find answers to common queries about Tripzy's services, companion matches, and payments.</p>
-        <div className="col-md-6 mx-auto mt-4">
-          <div className="input-group shadow-sm rounded-pill overflow-hidden border">
-            <span className="input-group-text bg-white border-0 ps-3">
-              <i className="bi bi-search text-emerald"></i>
-            </span>
-            <input 
-              type="text" 
-              className="form-control border-0 py-2 ps-2" 
-              placeholder="Search for answers..." 
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              style={{ boxShadow: 'none', outline: 'none' }}
-            />
+    <div className="animate-fade-in">
+      <PageHero 
+        title="What can we help?"
+        subtitle="Find answers to common queries about Tripzy's services, companion matches, and payments."
+        badge="Help Center"
+        backgroundImage="https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=1600&q=80"
+      />
+
+      <div className="container pb-5">
+        <div className="row justify-content-center mb-5">
+          <div className="col-lg-8">
+            <div className="card glass-card border-0 p-3 shadow-sm">
+              <div className="input-group rounded-pill overflow-hidden border bg-white">
+                <span className="input-group-text bg-white border-0 ps-3">
+                  <i className="bi bi-search text-emerald"></i>
+                </span>
+                <input 
+                  type="text" 
+                  className="form-control border-0 py-2 ps-2" 
+                  placeholder="Search for answers..." 
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  style={{ boxShadow: 'none', outline: 'none' }}
+                />
+              </div>
+            </div>
           </div>
         </div>
-      </div>
 
       <div className="row justify-content-center">
         <div className="col-lg-8">
@@ -98,6 +106,7 @@ export default function FAQs() {
           )}
         </div>
       </div>
+    </div>
     </div>
   );
 }

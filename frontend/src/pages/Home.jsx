@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import logo from '../assets/logo.png';
 import waterfall from '../assets/waterfall.png';
+import beach from '../assets/beach.png';
+import sigiriya from '../assets/sigiriya.png';
 import guidImg from '../assets/guid.jpeg';
 
 
 const slides = [
   {
-    image: "https://images.unsplash.com/photo-1546708973-b339540b5162?auto=format&fit=crop&w=1600&q=80",
+    image: sigiriya,
     badge: "🌴 AYUBOWAN - WELCOME TO SRI LANKA",
     headline: "Explore Sri Lanka's Natural Beauty",
     description: "Plan your complete itinerary with Tripzy. Secure offline payments, dynamic weather forecasts, certified local guides, and shared travel groups."
@@ -18,7 +20,7 @@ const slides = [
     description: "Connect with certified local guides for hikes on the famous Nine Arches Bridge, Ella Rock, and Adams Peak."
   },
   {
-    image: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80",
+    image: beach,
     badge: "🌊 SOUTHERN BEACHES - SUN & SURF",
     headline: "Relax Along Golden Tropical Shores",
     description: "Find travel companions, rent surfing gear, and secure beachfront resort bookings with easy offline payments."
@@ -31,7 +33,7 @@ export default function Home({ onNavigate, currentUser }) {
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
-    }, 5000);
+    }, 7000);
     return () => clearInterval(timer);
   }, []);
   const testimonials = [

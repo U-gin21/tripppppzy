@@ -21,6 +21,30 @@ class Booking {
             throw new Exception("Service not found.");
         }
 
+        // Validate date ranges
+        $start = new DateTime($data['start_date']);
+        $end = new DateTime($data['end_date']);
+        if ($start > $end) {
+            throw new Exception("Start date cannot be after end date.");
+        }
+
+        // Check for date overlap for the same service (pending or completed bookings)
+        $checkOverlap = $this->db->prepare("
+            SELECT COUNT(*) FROM bookings 
+            WHERE service_id = ? 
+              AND status IN ('pending', 'completed')
+              AND start_date <= ? 
+              AND end_date >= ?
+        ");
+        $checkOverlap->execute([
+            $data['service_id'],
+            $data['end_date'],
+            $data['start_date']
+        ]);
+        if ($checkOverlap->fetchColumn() > 0) {
+            throw new Exception("This service is already booked for the selected dates. Please choose a different date range.");
+        }
+
         // Calculate price based on duration
         $start = new DateTime($data['start_date']);
         $end = new DateTime($data['end_date']);
@@ -91,6 +115,18 @@ class Booking {
         return false;
     }
 
+    public function getByServiceId($serviceId) {
+        $stmt = $this->db->prepare("
+            SELECT start_date, end_date 
+            FROM bookings 
+            WHERE service_id = ? 
+              AND status IN ('pending', 'completed')
+            ORDER BY start_date ASC
+        ");
+        $stmt->execute([$serviceId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public function getById($id) {
         $stmt = $this->db->prepare("
             SELECT b.*, s.name_of_institute, s.service_type, s.contact_no as service_contact, s.email as service_email,
@@ -137,18 +173,12 @@ class Booking {
         if ($result) {
             $booking = $this->getById($id);
             if ($booking) {
-                // If booking is completed, disable the associated service post so it cannot be booked again.
-                if ($status === 'completed') {
-                    $serviceStmt = $this->db->prepare("UPDATE services SET status = 'disabled' WHERE id = ?");
-                    $serviceStmt->execute([$booking['service_id']]);
-                }
-
                 // Email status update to Tourist
                 $subject = "Tripzy Booking Status Updated - Ref: " . $booking['ref_no'];
                 $body = "<h2>Dear " . htmlspecialchars($booking['tourist_name']) . ",</h2>";
                 $body .= "<p>Your booking for <strong>" . htmlspecialchars($booking['name_of_institute']) . "</strong> (Ref: " . $booking['ref_no'] . ") has been marked as: <strong>" . strtoupper($status) . "</strong>.</p>";
                 if ($status === 'completed') {
-                    $body .= "<p>Thank you for completing your payment. Your booking is officially verified. The service post has been disabled to prevent further bookings for this specific offer.</p>";
+                    $body .= "<p>Thank you for completing your payment. Your booking is officially verified.</p>";
                 } else if ($status === 'rejected') {
                     $body .= "<p>We are sorry, but your booking request was declined. Please contact the provider at " . htmlspecialchars($booking['service_contact']) . " for details.</p>";
                 }

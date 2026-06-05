@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import { apiRequest, getUploadUrl } from '../api';
+import PageHero from '../components/PageHero';
 
 export default function CompanionFinder({ currentUser, onNavigate }) {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [msg, setMsg] = useState({ type: '', text: '' });
 
   // Filters
   const [filterDest, setFilterDest] = useState('');
@@ -120,11 +120,10 @@ export default function CompanionFinder({ currentUser, onNavigate }) {
   const handleCreatePost = async (e) => {
     e.preventDefault();
     if (!currentUser) {
-      setMsg({ type: 'danger', text: 'You must log in to create companion posts.' });
+      alert('You must log in to create companion posts.');
       return;
     }
     setSubmitting(true);
-    setMsg({ type: '', text: '' });
 
     try {
       await apiRequest('companions', 'create_post', 'POST', {
@@ -138,7 +137,7 @@ export default function CompanionFinder({ currentUser, onNavigate }) {
         description: desc
       });
       
-      setMsg({ type: 'success', text: 'Companion finder post created successfully!' });
+      alert('Companion finder post created successfully!');
       setDest('');
       setStartDate('');
       setEndDate('');
@@ -151,7 +150,7 @@ export default function CompanionFinder({ currentUser, onNavigate }) {
       refreshData();
       safeHideModal('createPostModal');
     } catch (err) {
-      setMsg({ type: 'danger', text: err.message });
+      alert(err.message);
     } finally {
       setSubmitting(false);
     }
@@ -183,44 +182,46 @@ export default function CompanionFinder({ currentUser, onNavigate }) {
         request_id: requestId,
         status
       });
-      setMsg({ type: 'success', text: `Request ${status} successfully.` });
+      alert(`Request ${status} successfully.`);
       refreshData();
     } catch (err) {
-      setMsg({ type: 'danger', text: err.message });
+      alert(err.message);
     }
   };
 
   return (
-    <div className="container py-5">
-      <div className="animate-fade-in">
-      <div className="d-flex justify-content-between align-items-center mb-5 flex-wrap gap-3">
-        <div>
-          <h1 className="fw-bold text-gradient display-5">Travel Companion Finder</h1>
-          <p className="text-muted mb-0">Don't travel alone. Find like-minded companions to explore Sri Lanka and share expenses.</p>
-        </div>
-        <button 
-          className="btn btn-gradient px-4 py-2 rounded-3 shadow" 
-          data-bs-toggle={currentUser ? "modal" : undefined} 
-          data-bs-target={currentUser ? "#createPostModal" : undefined}
-          onClick={() => {
-            if (!currentUser) {
-              if (onNavigate) {
-                onNavigate('auth');
-              } else {
-                alert("Please log in to post a travel plan.");
-              }
-            }
-          }}
-        >
-          <i className="bi bi-plus-circle-fill me-2"></i> Post Travel Plan
-        </button>
-      </div>
+    <div className="animate-fade-in">
+      <PageHero 
+        title="Travel Companion Finder"
+        subtitle="Don't travel alone. Find like-minded companions to explore Sri Lanka and share expenses."
+        badge="Community Travel"
+        backgroundImage="https://images.unsplash.com/photo-1539635278303-d4002c07eae3?auto=format&fit=crop&w=1600&q=80"
+      />
 
-      {msg.text && (
-        <div className={`alert alert-${msg.type} text-center`} role="alert">
-          {msg.text}
+      <div className="container pb-5">
+        <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+          <div>
+            <h3 className="fw-bold text-gradient mb-0">Explore Travel Groups</h3>
+            <p className="text-muted small mb-0">Connect with fellow travelers and plan trips together.</p>
+          </div>
+          <button 
+            className="btn btn-gradient px-4 py-2 rounded-3 shadow" 
+            data-bs-toggle={currentUser ? "modal" : undefined} 
+            data-bs-target={currentUser ? "#createPostModal" : undefined}
+            onClick={() => {
+              if (!currentUser) {
+                if (onNavigate) {
+                  onNavigate('auth');
+                } else {
+                  alert("Please log in to post a travel plan.");
+                }
+              }
+            }}
+          >
+            <i className="bi bi-plus-circle-fill me-2"></i> Post Travel Plan
+          </button>
         </div>
-      )}
+
 
       <div className="card glass-card p-3 border-0 mb-4">
         <div className="row g-3 align-items-end">

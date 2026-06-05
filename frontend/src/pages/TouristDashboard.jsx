@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { apiRequest, getUploadUrl } from '../api';
+import flatpickr from 'flatpickr';
+import 'flatpickr/dist/flatpickr.min.css';
 
-export default function TouristDashboard({ currentUser, onProfileUpdate, initialTab, initialServiceType }) {
-  const [activeTab, setActiveTab] = useState(initialTab || 'bookings'); // bookings, services, companion, profile, notifications
+export default function TouristDashboard({ currentUser, onProfileUpdate, initialServiceType, onLogout, activeTab, setActiveTab, showConfirm }) {
 
   // Data states
   const [bookings, setBookings] = useState([]);
@@ -26,6 +27,13 @@ export default function TouristDashboard({ currentUser, onProfileUpdate, initial
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [bookingDetails, setBookingDetails] = useState('');
+  const [bookingSubmitting, setBookingSubmitting] = useState(false);
+  const [serviceBookings, setServiceBookings] = useState([]);
+
+  const startDateRef = useRef(null);
+  const endDateRef = useRef(null);
+  const startDateInstance = useRef(null);
+  const endDateInstance = useRef(null);
 
   // Review Form State
   const [reviewServiceId, setReviewServiceId] = useState(null);
@@ -49,11 +57,7 @@ export default function TouristDashboard({ currentUser, onProfileUpdate, initial
   // Search service filter
   const [serviceTypeFilter, setServiceTypeFilter] = useState(initialServiceType || 'hotel');
 
-  useEffect(() => {
-    if (initialTab) {
-      setActiveTab(initialTab);
-    }
-  }, [initialTab]);
+
 
   useEffect(() => {
     if (initialServiceType) {
@@ -68,6 +72,109 @@ export default function TouristDashboard({ currentUser, onProfileUpdate, initial
     fetchCompanionDetails();
     fetchNotifications();
   }, []);
+
+  useEffect(() => {
+    if (selectedService) {
+      fetchServiceBookings(selectedService.id);
+    } else {
+      setServiceBookings([]);
+    }
+  }, [selectedService]);
+
+  const fetchServiceBookings = async (serviceId) => {
+    try {
+      const res = await apiRequest('bookings', 'service_bookings', 'GET', { service_id: serviceId });
+      setServiceBookings(res.bookings || []);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    // Destroy previous instances if they exist
+    if (startDateInstance.current) {
+      startDateInstance.current.destroy();
+      startDateInstance.current = null;
+    }
+    if (endDateInstance.current) {
+      endDateInstance.current.destroy();
+      endDateInstance.current = null;
+    }
+
+    if (!selectedService || !startDateRef.current || !endDateRef.current) return;
+
+    const disableRanges = serviceBookings.map(b => ({
+      from: b.start_date,
+      to: b.end_date
+    }));
+
+    // Initialize Start Date Picker
+    startDateInstance.current = flatpickr(startDateRef.current, {
+      dateFormat: "Y-m-d",
+      minDate: "today",
+      disable: disableRanges,
+      onChange: (selectedDates, dateStr) => {
+        setStartDate(dateStr);
+        // Clear end date if it is before start date or overlaps
+        if (endDate) {
+          const sVal = new Date(dateStr);
+          const eVal = new Date(endDate);
+          sVal.setHours(0,0,0,0);
+          eVal.setHours(0,0,0,0);
+          if (sVal > eVal) {
+            setEndDate('');
+            if (endDateInstance.current) {
+              endDateInstance.current.clear();
+            }
+          } else {
+            // Check overlap
+            const overlap = serviceBookings.some(b => {
+              const sOld = new Date(b.start_date);
+              const eOld = new Date(b.end_date);
+              sOld.setHours(0,0,0,0);
+              eOld.setHours(0,0,0,0);
+              return sVal <= eOld && eVal >= sOld;
+            });
+            if (overlap) {
+              setEndDate('');
+              if (endDateInstance.current) {
+                endDateInstance.current.clear();
+              }
+            }
+          }
+        }
+      }
+    });
+
+    // Initialize End Date Picker
+    endDateInstance.current = flatpickr(endDateRef.current, {
+      dateFormat: "Y-m-d",
+      minDate: startDate || "today",
+      disable: disableRanges,
+      onChange: (selectedDates, dateStr) => {
+        setEndDate(dateStr);
+      }
+    });
+
+    // Clean up instances when unmounting or dependencies change
+    return () => {
+      if (startDateInstance.current) {
+        startDateInstance.current.destroy();
+        startDateInstance.current = null;
+      }
+      if (endDateInstance.current) {
+        endDateInstance.current.destroy();
+        endDateInstance.current = null;
+      }
+    };
+  }, [selectedService, serviceBookings]);
+
+  // Adjust minDate of End Date Picker when startDate changes
+  useEffect(() => {
+    if (endDateInstance.current) {
+      endDateInstance.current.set("minDate", startDate || "today");
+    }
+  }, [startDate]);
 
   const fetchBookings = async () => {
     try {
@@ -217,8 +324,133 @@ export default function TouristDashboard({ currentUser, onProfileUpdate, initial
     }
   };
 
+  const handleStartDateChange = (val) => {
+    if (!val) {
+      setStartDate('');
+      return;
+    }
+    const selectedDate = new Date(val);
+    selectedDate.setHours(0,0,0,0);
+    
+    const isBooked = serviceBookings.some(b => {
+      const s = new Date(b.start_date);
+      const e = new Date(b.end_date);
+      s.setHours(0,0,0,0);
+      e.setHours(0,0,0,0);
+      return selectedDate >= s && selectedDate <= e;
+    });
+
+    if (isBooked) {
+      alert("This date is already booked. Please select an available date.");
+      setStartDate('');
+      return;
+    }
+
+    if (endDate) {
+      const eNew = new Date(endDate);
+      eNew.setHours(0,0,0,0);
+      if (selectedDate > eNew) {
+        alert("Start date cannot be after end date.");
+        setStartDate('');
+        return;
+      }
+      
+      const hasOverlap = serviceBookings.some(b => {
+        const sOld = new Date(b.start_date);
+        const eOld = new Date(b.end_date);
+        sOld.setHours(0,0,0,0);
+        eOld.setHours(0,0,0,0);
+        return selectedDate <= eOld && eNew >= sOld;
+      });
+
+      if (hasOverlap) {
+        alert("The selected range overlaps with an existing booking. Please choose a different range.");
+        setStartDate('');
+        return;
+      }
+    }
+    setStartDate(val);
+  };
+
+  const handleEndDateChange = (val) => {
+    if (!val) {
+      setEndDate('');
+      return;
+    }
+    const selectedDate = new Date(val);
+    selectedDate.setHours(0,0,0,0);
+
+    const isBooked = serviceBookings.some(b => {
+      const s = new Date(b.start_date);
+      const e = new Date(b.end_date);
+      s.setHours(0,0,0,0);
+      e.setHours(0,0,0,0);
+      return selectedDate >= s && selectedDate <= e;
+    });
+
+    if (isBooked) {
+      alert("This date is already booked. Please select an available date.");
+      setEndDate('');
+      return;
+    }
+
+    if (startDate) {
+      const sNew = new Date(startDate);
+      sNew.setHours(0,0,0,0);
+      if (selectedDate < sNew) {
+        alert("End date cannot be before start date.");
+        setEndDate('');
+        return;
+      }
+      
+      const hasOverlap = serviceBookings.some(b => {
+        const sOld = new Date(b.start_date);
+        const eOld = new Date(b.end_date);
+        sOld.setHours(0,0,0,0);
+        eOld.setHours(0,0,0,0);
+        return sNew <= eOld && selectedDate >= sOld;
+      });
+
+      if (hasOverlap) {
+        alert("The selected range overlaps with an existing booking. Please choose a different range.");
+        setEndDate('');
+        return;
+      }
+    }
+    setEndDate(val);
+  };
+
+  const isDateOverlapping = (start, end) => {
+    if (!start || !end) return false;
+    const sNew = new Date(start);
+    const eNew = new Date(end);
+    sNew.setHours(0,0,0,0);
+    eNew.setHours(0,0,0,0);
+
+    return serviceBookings.some(b => {
+      const sOld = new Date(b.start_date);
+      const eOld = new Date(b.end_date);
+      sOld.setHours(0,0,0,0);
+      eOld.setHours(0,0,0,0);
+      return sNew <= eOld && eNew >= sOld;
+    });
+  };
+
   const handleCreateBooking = async (e) => {
     e.preventDefault();
+    if (bookingSubmitting) return;
+
+    if (new Date(startDate) > new Date(endDate)) {
+      alert("Start date cannot be after end date.");
+      return;
+    }
+
+    if (isDateOverlapping(startDate, endDate)) {
+      alert("This service is already booked for the selected dates. Please choose a different date range.");
+      return;
+    }
+
+    setBookingSubmitting(true);
     try {
       const res = await apiRequest('bookings', 'create', 'POST', {
         service_id: selectedService.id,
@@ -236,6 +468,8 @@ export default function TouristDashboard({ currentUser, onProfileUpdate, initial
       fetchBookings();
     } catch (err) {
       alert(err.message);
+    } finally {
+      setBookingSubmitting(false);
     }
   };
 
@@ -315,37 +549,52 @@ export default function TouristDashboard({ currentUser, onProfileUpdate, initial
     }
   };
 
-  const handleDeletePost = async (postId) => {
-    if (!window.confirm("Are you sure you want to delete this companion post? This action cannot be undone.")) return;
-    try {
-      await apiRequest('companions', 'delete_post', 'POST', { post_id: postId });
-      alert("Companion post deleted successfully.");
-      fetchCompanionDetails();
-    } catch (err) {
-      alert(err.message);
-    }
+  const handleDeletePost = (postId) => {
+    showConfirm(
+      "Are you sure you want to delete this companion post? This action cannot be undone.",
+      async () => {
+        try {
+          await apiRequest('companions', 'delete_post', 'POST', { post_id: postId });
+          alert("Companion post deleted successfully.");
+          fetchCompanionDetails();
+        } catch (err) {
+          alert(err.message);
+        }
+      },
+      "Delete Companion Post"
+    );
   };
 
-  const handleClosePost = async (postId) => {
-    if (!window.confirm("Close this companion search? You will no longer accept new requests.")) return;
-    try {
-      await apiRequest('companions', 'close_post', 'POST', { post_id: postId });
-      alert("Companion post closed. No more join requests accepted.");
-      fetchCompanionDetails();
-    } catch (err) {
-      alert(err.message);
-    }
+  const handleClosePost = (postId) => {
+    showConfirm(
+      "Close this companion search? You will no longer accept new requests.",
+      async () => {
+        try {
+          await apiRequest('companions', 'close_post', 'POST', { post_id: postId });
+          alert("Companion post closed. No more join requests accepted.");
+          fetchCompanionDetails();
+        } catch (err) {
+          alert(err.message);
+        }
+      },
+      "Close Companion Search"
+    );
   };
 
-  const handleCancelRequest = async (requestId) => {
-    if (!window.confirm("Cancel this join request? You can send another request later.")) return;
-    try {
-      await apiRequest('companions', 'cancel_request', 'POST', { request_id: requestId });
-      alert("Join request cancelled.");
-      fetchCompanionDetails();
-    } catch (err) {
-      alert(err.message);
-    }
+  const handleCancelRequest = (requestId) => {
+    showConfirm(
+      "Cancel this join request? You can send another request later.",
+      async () => {
+        try {
+          await apiRequest('companions', 'cancel_request', 'POST', { request_id: requestId });
+          alert("Join request cancelled.");
+          fetchCompanionDetails();
+        } catch (err) {
+          alert(err.message);
+        }
+      },
+      "Cancel Join Request"
+    );
   };
 
   return (
@@ -357,7 +606,11 @@ export default function TouristDashboard({ currentUser, onProfileUpdate, initial
         </div>
         <div className="text-center mb-4">
           <img 
-            src={getUploadUrl(currentUser.profile_photo) || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80'} 
+            src={currentUser.profile_photo && currentUser.profile_photo !== 'default_profile.jpg'
+              ? getUploadUrl(currentUser.profile_photo)
+              : (currentUser.gender === 'female' 
+                  ? "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80"
+                  : "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&q=80")} 
             alt="Profile" 
             className="rounded-circle border-2 border-success mb-2" 
             style={{ width: '80px', height: '80px', objectFit: 'cover' }}
@@ -367,28 +620,33 @@ export default function TouristDashboard({ currentUser, onProfileUpdate, initial
         </div>
         <ul className="sidebar-menu">
           <li className={`sidebar-item ${activeTab === 'bookings' ? 'active' : ''}`}>
-            <a href="#" onClick={() => setActiveTab('bookings')}>
+            <a href="#" onClick={(e) => { e.preventDefault(); setActiveTab('bookings'); }}>
               <i className="bi bi-calendar-check"></i> Bookings & History
             </a>
           </li>
           <li className={`sidebar-item ${activeTab === 'services' ? 'active' : ''}`}>
-            <a href="#" onClick={() => setActiveTab('services')}>
+            <a href="#" onClick={(e) => { e.preventDefault(); setActiveTab('services'); }}>
               <i className="bi bi-shop"></i> Book Services
             </a>
           </li>
           <li className={`sidebar-item ${activeTab === 'companion' ? 'active' : ''}`}>
-            <a href="#" onClick={() => setActiveTab('companion')}>
+            <a href="#" onClick={(e) => { e.preventDefault(); setActiveTab('companion'); }}>
               <i className="bi bi-people"></i> My Companions
             </a>
           </li>
           <li className={`sidebar-item ${activeTab === 'profile' ? 'active' : ''}`}>
-            <a href="#" onClick={() => setActiveTab('profile')}>
+            <a href="#" onClick={(e) => { e.preventDefault(); setActiveTab('profile'); }}>
               <i className="bi bi-person-fill-gear"></i> Manage Profile
             </a>
           </li>
           <li className={`sidebar-item ${activeTab === 'notifications' ? 'active' : ''}`}>
-            <a href="#" onClick={() => setActiveTab('notifications')}>
+            <a href="#" onClick={(e) => { e.preventDefault(); setActiveTab('notifications'); }}>
               <i className="bi bi-bell-fill"></i> Notifications
+            </a>
+          </li>
+          <li className="sidebar-item mt-4 border-top pt-3">
+            <a href="#" onClick={(e) => { e.preventDefault(); onLogout(); }} className="text-danger fw-bold">
+              <i className="bi bi-box-arrow-right text-danger"></i> Logout
             </a>
           </li>
         </ul>
@@ -462,33 +720,32 @@ export default function TouristDashboard({ currentUser, onProfileUpdate, initial
         {/* TAB: BOOK SERVICES */}
         {activeTab === 'services' && (
           <div>
-            <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-              <h2 className="fw-bold text-gradient mb-0">Book Tourism Services</h2>
-              <div className="btn-group" role="group">
-                <button 
-                  className={`btn btn-sm ${serviceTypeFilter === 'hotel' ? 'btn-primary' : 'btn-outline-primary'}`}
-                  onClick={() => setServiceTypeFilter('hotel')}
-                >
-                  Hotels
-                </button>
-                <button 
-                  className={`btn btn-sm ${serviceTypeFilter === 'vehicle' ? 'btn-primary' : 'btn-outline-primary'}`}
-                  onClick={() => setServiceTypeFilter('vehicle')}
-                >
-                  Vehicles
-                </button>
-                <button 
-                  className={`btn btn-sm ${serviceTypeFilter === 'guide' ? 'btn-primary' : 'btn-outline-primary'}`}
-                  onClick={() => setServiceTypeFilter('guide')}
-                >
-                  Tour Guides
-                </button>
-                <button 
-                  className={`btn btn-sm ${serviceTypeFilter === 'camping_tool' ? 'btn-primary' : 'btn-outline-primary'}`}
-                  onClick={() => setServiceTypeFilter('camping_tool')}
-                >
-                  Camping Tools
-                </button>
+            <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3 border-bottom pb-3">
+              <div>
+                <h2 className="fw-bold text-gradient mb-1">Book Tourism Services</h2>
+                <p className="text-muted small mb-0">Reserve premium hotels, vehicles, guides, or camping tools in Sri Lanka.</p>
+              </div>
+              <div className="d-flex gap-2 bg-white p-2 rounded-pill shadow-sm border">
+                {[
+                  { id: 'hotel', label: 'Hotels', icon: 'bi-building' },
+                  { id: 'vehicle', label: 'Vehicles', icon: 'bi-car-front' },
+                  { id: 'guide', label: 'Guides', icon: 'bi-compass' },
+                  { id: 'camping_tool', label: 'Camping', icon: 'bi-backpack' },
+                ].map((item) => (
+                  <button
+                    key={item.id}
+                    className={`btn px-3 py-2 rounded-pill fw-bold border-0 transition d-flex align-items-center gap-2`}
+                    style={{
+                      background: serviceTypeFilter === item.id ? 'var(--grad-blue-green)' : 'transparent',
+                      color: serviceTypeFilter === item.id ? '#fff' : '#64748b',
+                      fontSize: '13px',
+                      transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+                    }}
+                    onClick={() => setServiceTypeFilter(item.id)}
+                  >
+                    <i className={`bi ${item.icon}`}></i> {item.label}
+                  </button>
+                ))}
               </div>
             </div>
 
@@ -803,64 +1060,142 @@ export default function TouristDashboard({ currentUser, onProfileUpdate, initial
           <div>
             <h2 className="fw-bold text-gradient mb-4">Manage Your Tourist Profile</h2>
             <div className="row g-4 mb-4">
-              <div className="col-md-6">
-                <div className="card glass-card p-4 border-0">
-                  <div className="text-center mb-4">
-                    <img
-                      src={profilePhoto ? previewPhotoUrl : getUploadUrl(currentUser.profile_photo) || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80'}
-                      alt="Profile"
-                      className="rounded-circle border-2 border-success mb-3"
-                      style={{ width: '120px', height: '120px', objectFit: 'cover' }}
-                    />
-                    <h5 className="fw-bold">{currentUser.full_name}</h5>
-                    <p className="text-muted small mb-0">{currentUser.email}</p>
+              {/* Profile Preview Card & Statistics */}
+              <div className="col-lg-4">
+                <div className="card glass-card border-0 overflow-hidden text-center pb-4 h-100">
+                  <div className="profile-card-header"></div>
+                  <div className="profile-avatar-container mb-3">
+                    <div className="profile-avatar-wrapper">
+                      <img
+                        src={profilePhoto ? previewPhotoUrl : (currentUser.profile_photo && currentUser.profile_photo !== 'default_profile.jpg' ? getUploadUrl(currentUser.profile_photo) : 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80')}
+                        alt="Profile"
+                        className="profile-avatar-img"
+                      />
+                      <label htmlFor="profile-photo-input" className="profile-upload-overlay" title="Upload New Photo">
+                        <i className="bi bi-camera-fill"></i>
+                      </label>
+                    </div>
                   </div>
+                  <input
+                    type="file"
+                    id="profile-photo-input"
+                    accept="image/*"
+                    className="d-none"
+                    onChange={(e) => setProfilePhoto(e.target.files[0] || null)}
+                  />
+                  <h4 className="fw-bold mb-1 text-gradient">{currentUser.full_name}</h4>
+                  <div className="mb-2">
+                    <span className="badge rounded-pill bg-success bg-opacity-10 text-success border border-success border-opacity-10 px-3 py-1">Tourist Account</span>
+                  </div>
+                  <div className="profile-verified-badge mb-4">
+                    <i className="bi bi-shield-fill-check"></i> {currentUser.email} (Verified)
+                  </div>
+                  
+                  <div className="px-3">
+                    <h6 className="fw-bold text-start text-uppercase text-secondary small mb-3 border-bottom pb-2">Platform Activity</h6>
+                    <div className="row g-3 text-start">
+                      <div className="col-6">
+                        <div className="profile-stat-box text-center">
+                          <div className="profile-stat-icon bg-success bg-opacity-10 text-success mx-auto">
+                            <i className="bi bi-calendar-check-fill"></i>
+                          </div>
+                          <h4 className="fw-bold mb-0 text-dark">{bookings.length}</h4>
+                          <span className="text-muted small">Total Bookings</span>
+                        </div>
+                      </div>
+                      <div className="col-6">
+                        <div className="profile-stat-box text-center">
+                          <div className="profile-stat-icon bg-primary bg-opacity-10 text-primary mx-auto">
+                            <i className="bi bi-compass-fill"></i>
+                          </div>
+                          <h4 className="fw-bold mb-0 text-dark">{myPosts.length}</h4>
+                          <span className="text-muted small">Travel Plans</span>
+                        </div>
+                      </div>
+                      <div className="col-12">
+                        <div className="profile-stat-box d-flex align-items-center gap-3">
+                          <div className="profile-stat-icon bg-warning bg-opacity-10 text-warning mb-0">
+                            <i className="bi bi-person-plus-fill"></i>
+                          </div>
+                          <div>
+                            <h5 className="fw-bold mb-0 text-dark">{myRequests.length}</h5>
+                            <span className="text-muted small">Sent Join Requests</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Profile Edit Fields Form */}
+              <div className="col-lg-8">
+                <div className="card glass-card p-4 border-0 h-100">
+                  <h4 className="fw-bold mb-2 text-gradient"><i className="bi bi-person-fill-gear me-2"></i>Account Information</h4>
+                  <p className="text-muted small mb-4">Edit fields you wish to update. Unchanged fields will remain as they are.</p>
                   <form onSubmit={handleProfileUpdateSubmit}>
-                    <div className="mb-3">
-                      <label className="form-label small fw-bold">Full Name</label>
-                      <input
-                        type="text"
-                        className="form-control rounded-3 form-control-sm"
-                        value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
-                        placeholder={currentUser.full_name || ''}
-                      />
-                      <div className="form-text small">Leave empty to keep your current name.</div>
+                    <div className="row g-3">
+                      <div className="col-md-6">
+                        <label className="form-label small fw-bold">Full Name</label>
+                        <div className="input-group">
+                          <span className="input-group-text bg-light border-end-0"><i className="bi bi-person text-secondary"></i></span>
+                          <input
+                            type="text"
+                            className="form-control rounded-end-3"
+                            value={fullName}
+                            onChange={(e) => setFullName(e.target.value)}
+                            placeholder={currentUser.full_name || ''}
+                          />
+                        </div>
+                        <div className="form-text small">Leave empty to keep your current name.</div>
+                      </div>
+                      
+                      <div className="col-md-6">
+                        <label className="form-label small fw-bold">Name with Initials</label>
+                        <div className="input-group">
+                          <span className="input-group-text bg-light border-end-0"><i className="bi bi-person-badge text-secondary"></i></span>
+                          <input
+                            type="text"
+                            className="form-control rounded-end-3"
+                            value={nameWithInitial}
+                            onChange={(e) => setNameWithInitial(e.target.value)}
+                            placeholder={currentUser.name_with_initial || ''}
+                          />
+                        </div>
+                        <div className="form-text small">Leave empty to keep your current initials.</div>
+                      </div>
+
+                      <div className="col-md-12">
+                        <label className="form-label small fw-bold">Contact Phone Number</label>
+                        <div className="input-group">
+                          <span className="input-group-text bg-light border-end-0"><i className="bi bi-telephone text-secondary"></i></span>
+                          <input
+                            type="tel"
+                            className="form-control rounded-end-3"
+                            value={contactNo}
+                            onChange={(e) => setContactNo(e.target.value)}
+                            placeholder={currentUser.contact_no || ''}
+                          />
+                        </div>
+                        <div className="form-text small">Leave empty to keep your current contact number.</div>
+                      </div>
+                      
+                      <div className="col-12 mt-4 pt-3 border-top">
+                        <button type="submit" className="btn btn-gradient w-100 py-3 rounded-pill shadow-sm fw-bold d-flex align-items-center justify-content-center gap-2 animate-float-hover" disabled={profileLoading}>
+                          {profileLoading ? (
+                            <>
+                              <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                              Saving Profile Details...
+                            </>
+                          ) : (
+                            <>
+                              <i className="bi bi-check-circle-fill"></i>
+                              Save Profile Changes
+                            </>
+                          )}
+                        </button>
+                      </div>
                     </div>
-                    <div className="mb-3">
-                      <label className="form-label small fw-bold">Name with Initials</label>
-                      <input
-                        type="text"
-                        className="form-control rounded-3 form-control-sm"
-                        value={nameWithInitial}
-                        onChange={(e) => setNameWithInitial(e.target.value)}
-                        placeholder={currentUser.name_with_initial || ''}
-                      />
-                      <div className="form-text small">Leave empty to keep your current initials.</div>
-                    </div>
-                    <div className="mb-3">
-                      <label className="form-label small fw-bold">Contact Phone Number</label>
-                      <input
-                        type="tel"
-                        className="form-control rounded-3 form-control-sm"
-                        value={contactNo}
-                        onChange={(e) => setContactNo(e.target.value)}
-                        placeholder={currentUser.contact_no || ''}
-                      />
-                      <div className="form-text small">Leave empty to keep your current contact number.</div>
-                    </div>
-                    <div className="mb-3">
-                      <label className="form-label small fw-bold">Update Profile Photo</label>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="form-control rounded-3 form-control-sm"
-                        onChange={(e) => setProfilePhoto(e.target.files[0] || null)}
-                      />
-                    </div>
-                    <button type="submit" className="btn btn-gradient btn-sm rounded-pill px-4" disabled={profileLoading}>
-                      {profileLoading ? 'Saving...' : 'Save Profile'}
-                    </button>
                   </form>
                 </div>
               </div>
@@ -890,20 +1225,24 @@ export default function TouristDashboard({ currentUser, onProfileUpdate, initial
                     <div className="col-6 mb-3">
                       <label className="form-label small fw-bold">Start Date</label>
                       <input 
-                        type="date" 
-                        className="form-control rounded-3" 
+                        type="text" 
+                        ref={startDateRef}
+                        className="form-control rounded-3 bg-white" 
                         value={startDate} 
-                        onChange={(e) => setStartDate(e.target.value)} 
+                        placeholder="Select Start Date"
+                        readOnly
                         required 
                       />
                     </div>
                     <div className="col-6 mb-3">
                       <label className="form-label small fw-bold">End Date</label>
                       <input 
-                        type="date" 
-                        className="form-control rounded-3" 
+                        type="text" 
+                        ref={endDateRef}
+                        className="form-control rounded-3 bg-white" 
                         value={endDate} 
-                        onChange={(e) => setEndDate(e.target.value)} 
+                        placeholder="Select End Date"
+                        readOnly
                         required 
                       />
                     </div>
@@ -926,7 +1265,9 @@ export default function TouristDashboard({ currentUser, onProfileUpdate, initial
                 </div>
                 <div className="modal-footer border-0 pt-0">
                   <button type="button" className="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
-                  <button type="submit" className="btn btn-gradient rounded-pill px-4">Submit Request</button>
+                  <button type="submit" className="btn btn-gradient rounded-pill px-4" disabled={bookingSubmitting}>
+                    {bookingSubmitting ? 'Submitting...' : 'Submit Request'}
+                  </button>
                 </div>
               </form>
             )}
