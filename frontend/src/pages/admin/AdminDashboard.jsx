@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { apiRequest, getUploadUrl } from '../api';
+import { apiRequest, getUploadUrl } from '../../api';
 
 export default function AdminDashboard({ currentUser, onProfileUpdate, onLogout, activeTab, setActiveTab, showConfirm }) {
   

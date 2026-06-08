@@ -618,11 +618,41 @@ body {
   height: 56px;
   border-radius: 50%;
   display: flex;
+}
+
+.custom-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 1050;
+
+  display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 12px auto;
-  font-size: 24px;
-  transition: all 0.25s ease;
+
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.custom-modal-overlay .modal-dialog {
+  z-index: 1055;
+  margin: 0;
+}
+
+.custom-modal-overlay .modal-content {
+  animation: modalFade 0.25s ease;
+}
+
+@keyframes modalFade {
+  from {
+    opacity: 0;
+    transform: translateY(-15px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .role-icon-tourist {

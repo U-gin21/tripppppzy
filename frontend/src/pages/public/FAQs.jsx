@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { apiRequest } from '../api';
-import PageHero from '../components/PageHero';
+import { apiRequest } from '../../api';
+import PageHero from '../../components/common/PageHero';
 
 export default function FAQs() {
   const [faqs, setFaqs] = useState([]);

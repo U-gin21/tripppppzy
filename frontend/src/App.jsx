@@ -1,16 +1,16 @@
 import { useEffect, useState } from 'react';
 import { apiRequest, getUploadUrl } from './api';
 import logo from './assets/logo.png';
-import Home from './pages/Home';
-import Explore from './pages/Explore';
-import AboutUs from './pages/AboutUs';
-import ContactUs from './pages/ContactUs';
-import FAQs from './pages/FAQs';
-import CompanionFinder from './pages/CompanionFinder';
-import Auth from './pages/Auth';
-import TouristDashboard from './pages/TouristDashboard';
-import ProviderDashboard from './pages/ProviderDashboard';
-import AdminDashboard from './pages/AdminDashboard';
+import Home from './pages/public/Home';
+import Explore from './pages/public/Explore';
+import AboutUs from './pages/public/AboutUs';
+import ContactUs from './pages/public/ContactUs';
+import FAQs from './pages/public/FAQs';
+import CompanionFinder from './pages/public/CompanionFinder';
+import Auth from './pages/public/Auth';
+import TouristDashboard from './pages/tourist/TouristDashboard';
+import ProviderDashboard from './pages/provider/ProviderDashboard';
+import AdminDashboard from './pages/admin/AdminDashboard';
 
 export default function App() {
   const [page, setPage] = useState('home');

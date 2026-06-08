@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { apiRequest } from '../api';
-import logo from '../assets/logo.png';
+import { apiRequest } from '../../api';
+import logo from '../../assets/logo.png';
 
 export default function Auth({ onLoginSuccess, initialMode = 'login' }) {
   const [isLogin, setIsLogin] = useState(true);

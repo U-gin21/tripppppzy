@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { apiRequest, getUploadUrl } from '../api';
+import { apiRequest, getUploadUrl } from '../../api';
 
 export default function ProviderDashboard({ currentUser, onProfileUpdate, onLogout, activeTab, setActiveTab, showConfirm }) {
   const [listings, setListings] = useState([]);

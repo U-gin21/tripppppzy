@@ -1,15 +1,15 @@
 const isLocalDev = ['localhost', '127.0.0.1'].includes(window.location.hostname);
 const localHost = window.location.hostname;
 const API_BASE = isLocalDev
-  ? `http://${localHost}/TRIPZY%20FINAL/api`
-  : window.location.origin + '/TRIPZY%20FINAL/api';
+  ? `http://${localHost}/TRIPZY%20FINAL/backend`
+  : window.location.origin + '/TRIPZY%20FINAL/backend';
 
 export const getUploadUrl = (path) => {
   if (!path) return '';
   const root = isLocalDev
     ? `http://${localHost}/TRIPZY%20FINAL`
     : window.location.origin + '/TRIPZY%20FINAL';
-  return `${root}/uploads/${path}`;
+  return `${root}/backend/uploads/${path}`;
 };
 
 export async function apiRequest(controller, action, method = 'GET', data = null) {

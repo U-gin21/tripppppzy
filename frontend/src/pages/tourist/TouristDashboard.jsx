@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { apiRequest, getUploadUrl } from '../api';
+import { apiRequest, getUploadUrl } from '../../api';
 import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
 

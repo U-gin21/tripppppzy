@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import logo from '../assets/logo.png';
-import waterfall from '../assets/waterfall.png';
-import beach from '../assets/beach.png';
-import sigiriya from '../assets/sigiriya.png';
-import guidImg from '../assets/guid.jpeg';
+import logo from '../../assets/logo.png';
+import waterfall from '../../assets/waterfall.png';
+import beach from '../../assets/beach.png';
+import sigiriya from '../../assets/sigiriya.png';
+import guidImg from '../../assets/guid.jpeg';
 
 
 const slides = [

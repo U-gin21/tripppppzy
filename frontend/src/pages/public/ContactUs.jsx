@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import PageHero from '../components/PageHero';
+import PageHero from '../../components/common/PageHero';
 
 export default function ContactUs() {
   const [name, setName] = useState('');
