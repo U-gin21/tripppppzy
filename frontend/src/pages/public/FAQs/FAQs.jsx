@@ -1,17 +1,13 @@
-import React, { useEffect, useState } from 'react';
-import { apiRequest } from '../../api';
-import PageHero from '../../components/common/PageHero';
+import { useEffect, useState } from 'react';
+import { apiRequest } from '../../../api';
+import PageHero from '../../../components/common/PageHero';
 
 export default function FAQs() {
   const [faqs, setFaqs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
 
-  useEffect(() => {
-    fetchFaqs();
-  }, []);
-
-  const fetchFaqs = async () => {
+  async function fetchFaqs() {
     try {
       const res = await apiRequest('faqs', 'list');
       setFaqs(res.faqs || []);
@@ -20,7 +16,11 @@ export default function FAQs() {
     } finally {
       setLoading(false);
     }
-  };
+  }
+
+  useEffect(() => {
+    fetchFaqs();
+  }, []);
 
   const filteredFaqs = faqs.filter(faq => 
     faq.question.toLowerCase().includes(search.toLowerCase()) || 

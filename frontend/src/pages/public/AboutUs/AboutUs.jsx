@@ -1,5 +1,5 @@
 import React from 'react';
-import PageHero from '../../components/common/PageHero';
+import PageHero from '../../../components/common/PageHero';
 
 export default function AboutUs() {
   return (

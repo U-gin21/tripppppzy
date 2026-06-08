@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
-import logo from '../../assets/logo.png';
-import waterfall from '../../assets/waterfall.png';
-import beach from '../../assets/beach.png';
-import sigiriya from '../../assets/sigiriya.png';
-import guidImg from '../../assets/guid.jpeg';
-
+import logo from '../../../assets/logo.png';
+import waterfall from '../../../assets/waterfall.png';
+import beach from '../../../assets/beach.png';
+import sigiriya from '../../../assets/sigiriya.png';
+import guidImg from '../../../assets/guid.jpeg';
 
 const slides = [
   {
@@ -36,11 +35,6 @@ export default function Home({ onNavigate, currentUser }) {
     }, 7000);
     return () => clearInterval(timer);
   }, []);
-  const testimonials = [
-    { name: "Sarah Miller", text: "The hotel booking and companion system was incredibly easy to use. Highly recommended for solo travelers!", location: "United Kingdom" },
-    { name: "Suresh Perera", text: "Registered my vehicle hiring business on Tripzy. Within days, I had multiple bookings from international tourists.", location: "Colombo, Sri Lanka" },
-    { name: "Max Dupont", text: "Weather predictions were 100% accurate. Saved us from a stormy hike in Ella! The companion matching details were super helpful.", location: "France" }
-  ];
 
   const servicesList = [
     { title: "Hotel Reservation", icon: "bi-building", desc: "Find comfortable, luxury, or budget-friendly resorts and hotels across the country.", serviceType: 'hotel' },
@@ -409,10 +403,10 @@ export default function Home({ onNavigate, currentUser }) {
             <div className="col-md-4 col-lg-3 offset-lg-1">
               <h6 className="fw-bold text-white mb-3">Quick Navigation</h6>
               <ul className="list-unstyled d-flex flex-column gap-2 text-muted small">
-                <li><a href="#" className="text-muted text-decoration-none" onClick={() => onNavigate('home')}>Home</a></li>
-                <li><a href="#" className="text-muted text-decoration-none" onClick={() => onNavigate('explore')}>Explore Destinations</a></li>
-                <li><a href="#" className="text-muted text-decoration-none" onClick={() => onNavigate('companions')}>Companion Finder</a></li>
-                <li><a href="#" className="text-muted text-decoration-none" onClick={() => onNavigate('faqs')}>FAQs</a></li>
+                <li><a href="#" className="text-muted text-decoration-none" onClick={(e) => { e.preventDefault(); onNavigate('home'); }}>Home</a></li>
+                <li><a href="#" className="text-muted text-decoration-none" onClick={(e) => { e.preventDefault(); onNavigate('explore'); }}>Explore Destinations</a></li>
+                <li><a href="#" className="text-muted text-decoration-none" onClick={(e) => { e.preventDefault(); onNavigate('companions'); }}>Companion Finder</a></li>
+                <li><a href="#" className="text-muted text-decoration-none" onClick={(e) => { e.preventDefault(); onNavigate('faqs'); }}>FAQs</a></li>
               </ul>
             </div>
             <div className="col-md-4 col-lg-4">

@@ -50,7 +50,7 @@ export async function apiRequest(controller, action, method = 'GET', data = null
     try {
       json = JSON.parse(text);
     } catch (parseError) {
-      throw new Error(`Invalid JSON response from ${controller}/${action}: ${parseError.message}\n${text}`);
+      throw new Error(`Invalid JSON response from ${controller}/${action}: ${parseError.message}\n${text}`, { cause: parseError });
     }
 
     if (!response.ok || json.success === false) {

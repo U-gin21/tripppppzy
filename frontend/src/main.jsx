@@ -18,7 +18,7 @@ function safeClearModalBodyState() {
       document.body.style.overflow = '';
       document.body.classList.remove('modal-open');
     }
-  } catch (e) {
+  } catch {
     // ignore
   }
 }
