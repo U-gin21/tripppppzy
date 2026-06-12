@@ -9,6 +9,7 @@ import DestinationsTab from './components/DestinationsTab';
 import FaqsTab from './components/FaqsTab';
 import ProfileTab from './components/ProfileTab';
 import BookingsTab from './components/BookingsTab';
+import UsersTab from './components/UsersTab';
 
 export default function AdminDashboard({ 
   currentUser, 
@@ -26,6 +27,7 @@ export default function AdminDashboard({
   const [destinations, setDestinations] = useState([]);
   const [faqs, setFaqs] = useState([]);
   const [bookings, setBookings] = useState([]);
+  const [users, setUsers] = useState([]);
 
   useEffect(() => {
     fetchStats();
@@ -33,6 +35,7 @@ export default function AdminDashboard({
     fetchDestinations();
     fetchFaqs();
     fetchBookings();
+    fetchUsers();
   }, []);
 
   async function fetchStats() {
@@ -82,6 +85,34 @@ export default function AdminDashboard({
       console.error(err);
     }
   }
+
+  async function fetchUsers() {
+    try {
+      const res = await apiRequest('admin', 'all_users');
+      setUsers(res.users || []);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  const handleToggleUserStatus = async (id, currentStatus) => {
+    const nextStatus = currentStatus === 'suspended' ? 'active' : 'suspended';
+    const actionText = currentStatus === 'suspended' ? 'activate' : 'suspend';
+    showConfirm(
+      `Are you sure you want to ${actionText} this user's account?`,
+      async () => {
+        try {
+          await apiRequest('admin', 'approve_user', 'POST', { id, status: nextStatus });
+          alert(`User account has been successfully ${nextStatus === 'suspended' ? 'suspended' : 'activated'}.`);
+          fetchUsers();
+          fetchStats();
+        } catch (err) {
+          alert(err.message);
+        }
+      },
+      `Confirm ${currentStatus === 'suspended' ? 'Activation' : 'Suspension'}`
+    );
+  };
 
   const handleApproveUser = async (id, status, type) => {
     try {
@@ -152,6 +183,10 @@ export default function AdminDashboard({
 
         {activeTab === 'bookings' && (
           <BookingsTab bookings={bookings} />
+        )}
+
+        {activeTab === 'users' && (
+          <UsersTab users={users} handleToggleUserStatus={handleToggleUserStatus} />
         )}
       </div>
     </div>

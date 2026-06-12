@@ -20,7 +20,10 @@ export default function DestinationsTab({ destinations, fetchDestinations, showC
   
   const districts = [
     'Colombo', 'Gampaha', 'Kalutara', 'Kandy', 'Matale', 'Nuwara Eliya', 
-    'Galle', 'Matara', 'Hambantota', 'Trincomalee', 'Badulla', 'Anuradhapura', 'Polonnaruwa'
+    'Galle', 'Matara', 'Hambantota', 'Jaffna', 'Kilinochchi', 'Mannar', 
+    'Vavuniya', 'Mullaitivu', 'Batticaloa', 'Ampara', 'Trincomalee', 
+    'Kurunegala', 'Puttalam', 'Anuradhapura', 'Polonnaruwa', 'Badulla', 
+    'Moneragala', 'Ratnapura', 'Kegalle'
   ];
 
   const handleCreateDestination = async (e) => {

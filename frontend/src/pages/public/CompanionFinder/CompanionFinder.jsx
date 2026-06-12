@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
-import { apiRequest, getUploadUrl } from '../../../api';
+import { getUploadUrl } from '../../../api';
+import PageHero from '../../../components/common/PageHero';
+import beach from '../../../assets/beach.png';
+import { companionService } from '../../../services/companionService';
+import './CompanionFinder.css';
 
 export default function CompanionFinder({ currentUser, onNavigate }) {
   const [posts, setPosts] = useState([]);
@@ -34,11 +38,11 @@ export default function CompanionFinder({ currentUser, onNavigate }) {
   const fetchPosts = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await apiRequest('companions', 'list_posts', 'GET', {
+      const postsData = await companionService.listPosts({
         destination: filterDest,
         gender_preference: filterGender
       });
-      setPosts(res.posts || []);
+      setPosts(postsData);
     } catch (err) {
       console.error(err);
     } finally {
@@ -49,8 +53,8 @@ export default function CompanionFinder({ currentUser, onNavigate }) {
   const fetchIncomingRequests = useCallback(async () => {
     setLoadingRequests(true);
     try {
-      const res = await apiRequest('companions', 'incoming_requests', 'GET');
-      setIncomingRequests(res.requests || []);
+      const requestsData = await companionService.getIncomingRequests();
+      setIncomingRequests(requestsData);
     } catch (err) {
       console.error(err);
     } finally {
@@ -60,8 +64,8 @@ export default function CompanionFinder({ currentUser, onNavigate }) {
 
   const fetchSentRequests = useCallback(async () => {
     try {
-      const res = await apiRequest('companions', 'my_requests', 'GET');
-      setSentRequests(res.requests || []);
+      const requestsData = await companionService.getMyRequests();
+      setSentRequests(requestsData);
     } catch (err) {
       console.error(err);
     }
@@ -69,8 +73,8 @@ export default function CompanionFinder({ currentUser, onNavigate }) {
 
   const fetchMyPosts = useCallback(async () => {
     try {
-      const res = await apiRequest('companions', 'my_posts', 'GET');
-      setMyPosts(res.posts || []);
+      const postsData = await companionService.getMyPosts();
+      setMyPosts(postsData);
     } catch (err) {
       console.error(err);
     }
@@ -123,7 +127,7 @@ export default function CompanionFinder({ currentUser, onNavigate }) {
     setMsg({ type: '', text: '' });
 
     try {
-      await apiRequest('companions', 'create_post', 'POST', {
+      await companionService.createPost({
         destination_place: dest,
         start_date: startDate,
         end_date: endDate,
@@ -160,10 +164,7 @@ export default function CompanionFinder({ currentUser, onNavigate }) {
       return;
     }
     try {
-      await apiRequest('companions', 'send_request', 'POST', {
-        post_id: selectedPost.id,
-        message: requestMsg
-      });
+      await companionService.sendRequest(selectedPost.id, requestMsg);
       alert('Join request sent successfully! You will be notified via email once the host approves.');
       setRequestMsg('');
       refreshData();
@@ -175,10 +176,7 @@ export default function CompanionFinder({ currentUser, onNavigate }) {
 
   const handleRequestAction = async (requestId, status) => {
     try {
-      await apiRequest('companions', 'update_request', 'POST', {
-        request_id: requestId,
-        status
-      });
+      await companionService.updateRequest(requestId, status);
       setMsg({ type: 'success', text: `Request ${status} successfully.` });
       refreshData();
     } catch (err) {
@@ -187,65 +185,93 @@ export default function CompanionFinder({ currentUser, onNavigate }) {
   };
 
   return (
-    <div className="container py-5">
-      <div className="animate-fade-in">
-      <div className="d-flex justify-content-between align-items-center mb-5 flex-wrap gap-3">
-        <div>
-          <h1 className="fw-bold text-gradient display-5">Travel Companion Finder</h1>
-          <p className="text-muted mb-0">Don't travel alone. Find like-minded companions to explore Sri Lanka and share expenses.</p>
+    <>
+      <PageHero
+        badge="👥 Travel Companions"
+        title="Find Your Travel Buddy"
+        subtitle="Connect with fellow adventurers, plan joint trips, share expenses, and discover Sri Lanka together."
+        backgroundImage={beach}
+      >
+        {/* Floating statistics row */}
+        <div className="d-flex flex-wrap justify-content-center gap-3 mb-4 mt-2">
+          <div className="text-center px-4 py-2 rounded-4 glass-card bg-white bg-opacity-10 border border-white-50 text-white" style={{ minWidth: '160px', backdropFilter: 'blur(8px)' }}>
+            <h4 className="fw-bold mb-0 text-shadow text-gradient" style={{ color: 'var(--accent-color)', WebkitTextFillColor: 'unset' }}><i className="bi bi-people-fill"></i> 1,200+</h4>
+            <span className="small text-white-50" style={{ fontSize: '11px' }}>Companions Met</span>
+          </div>
+          <div className="text-center px-4 py-2 rounded-4 glass-card bg-white bg-opacity-10 border border-white-50 text-white" style={{ minWidth: '160px', backdropFilter: 'blur(8px)' }}>
+            <h4 className="fw-bold mb-0 text-shadow text-gradient" style={{ color: 'var(--accent-color)', WebkitTextFillColor: 'unset' }}><i className="bi bi-map-fill"></i> 450+</h4>
+            <span className="small text-white-50" style={{ fontSize: '11px' }}>Trips Shared</span>
+          </div>
+          <div className="text-center px-4 py-2 rounded-4 glass-card bg-white bg-opacity-10 border border-white-50 text-white" style={{ minWidth: '160px', backdropFilter: 'blur(8px)' }}>
+            <h4 className="fw-bold mb-0 text-shadow text-gradient" style={{ color: 'var(--accent-color)', WebkitTextFillColor: 'unset' }}><i className="bi bi-shield-fill-check"></i> 100%</h4>
+            <span className="small text-white-50" style={{ fontSize: '11px' }}>Vetted Members</span>
+          </div>
         </div>
-        <button 
-          className="btn btn-gradient px-4 py-2 rounded-3 shadow" 
-          data-bs-toggle={currentUser ? "modal" : undefined} 
-          data-bs-target={currentUser ? "#createPostModal" : undefined}
-          onClick={() => {
-            if (!currentUser) {
-              if (onNavigate) {
-                onNavigate('auth');
-              } else {
-                alert("Please log in to post a travel plan.");
+
+        {/* Search filter card */}
+        <div className="card glass-card p-4 border-0 shadow-lg mx-auto mb-4" style={{ maxWidth: '850px', background: 'rgba(5, 25, 44, 0.65)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255, 255, 255, 0.15)' }}>
+          <div className="row g-3 text-start align-items-end">
+            <div className="col-md-5">
+              <label className="form-label small fw-bold text-white-50">Filter Destination</label>
+              <div className="input-group">
+                <span className="input-group-text bg-transparent border-0 text-white-50" style={{ pointerEvents: 'none' }}><i className="bi bi-search"></i></span>
+                <input 
+                  type="text" 
+                  className="form-control transparent-hero-input rounded-3" 
+                  placeholder="e.g. Ella, Kandy..." 
+                  value={filterDest}
+                  onChange={(e) => setFilterDest(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="col-md-5">
+              <label className="form-label small fw-bold text-white-50">Gender Preference</label>
+              <div className="input-group">
+                <span className="input-group-text bg-transparent border-0 text-white-50" style={{ pointerEvents: 'none' }}><i className="bi bi-gender-ambiguous"></i></span>
+                <select className="form-select transparent-hero-input rounded-3" value={filterGender} onChange={(e) => setFilterGender(e.target.value)}>
+                  <option value="">Any Gender Preference</option>
+                  <option value="male">Male Only</option>
+                  <option value="female">Female Only</option>
+                  <option value="Any">Co-ed / Any</option>
+                </select>
+              </div>
+            </div>
+            <div className="col-md-2">
+              <button className="btn btn-outline-light w-100 py-2 rounded-3" style={{ border: '2px solid rgba(255, 255, 255, 0.5)' }} onClick={() => { setFilterDest(''); setFilterGender(''); }}>
+                Clear Filters
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* CTA Button */}
+        <div className="d-flex justify-content-center">
+          <button 
+            className="btn btn-gradient btn-lg rounded-pill px-5 py-3 shadow animate-pulse" 
+            data-bs-toggle={currentUser ? "modal" : undefined} 
+            data-bs-target={currentUser ? "#createPostModal" : undefined}
+            onClick={() => {
+              if (!currentUser) {
+                if (onNavigate) {
+                  onNavigate('auth');
+                } else {
+                  alert("Please log in to post a travel plan.");
+                }
               }
-            }
-          }}
-        >
-          <i className="bi bi-plus-circle-fill me-2"></i> Post Travel Plan
-        </button>
-      </div>
-
-      {msg.text && (
-        <div className={`alert alert-${msg.type} text-center`} role="alert">
-          {msg.text}
+            }}
+          >
+            <i className="bi bi-plus-circle-fill me-2"></i> Post Travel Plan
+          </button>
         </div>
-      )}
+      </PageHero>
 
-      <div className="card glass-card p-3 border-0 mb-4">
-        <div className="row g-3 align-items-end">
-          <div className="col-md-5">
-            <label className="form-label small fw-bold">Filter Destination</label>
-            <input 
-              type="text" 
-              className="form-control rounded-3" 
-              placeholder="e.g. Ella, Kandy..." 
-              value={filterDest}
-              onChange={(e) => setFilterDest(e.target.value)}
-            />
-          </div>
-          <div className="col-md-5">
-            <label className="form-label small fw-bold">Gender Preference</label>
-            <select className="form-select rounded-3" value={filterGender} onChange={(e) => setFilterGender(e.target.value)}>
-              <option value="">Any Gender Preference</option>
-              <option value="male">Male Only</option>
-              <option value="female">Female Only</option>
-              <option value="Any">Co-ed / Any</option>
-            </select>
-          </div>
-          <div className="col-md-2">
-            <button className="btn btn-outline-gradient w-100 py-2 rounded-3" onClick={() => { setFilterDest(''); setFilterGender(''); }}>
-              Clear
-            </button>
-          </div>
-        </div>
-      </div>
+      <div className="container py-5">
+        <div className="animate-fade-in">
+          {msg.text && (
+            <div className={`alert alert-${msg.type} text-center`} role="alert">
+              {msg.text}
+            </div>
+          )}
 
       {loading ? (
         <div className="text-center py-5">
@@ -602,5 +628,6 @@ export default function CompanionFinder({ currentUser, onNavigate }) {
         </div>
       </div>
     </div>
+    </>
   );
 }

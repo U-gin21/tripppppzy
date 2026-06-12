@@ -52,6 +52,11 @@ export default function Sidebar({ currentUser, activeTab, setActiveTab, onLogout
             <i className="bi bi-collection-fill"></i> Monitor Bookings
           </a>
         </li>
+        <li className={`sidebar-item ${activeTab === 'users' ? 'active' : ''}`}>
+          <a href="#" onClick={(e) => { e.preventDefault(); setActiveTab('users'); }}>
+            <i className="bi bi-people-fill"></i> Manage Users
+          </a>
+        </li>
         <li className="sidebar-item mt-4 border-top pt-3">
           <a href="#" onClick={(e) => { e.preventDefault(); onLogout(); }} className="text-danger fw-bold">
             <i className="bi bi-box-arrow-right text-danger"></i> Logout

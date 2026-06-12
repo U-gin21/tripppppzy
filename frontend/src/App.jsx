@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { apiRequest } from './api';
+import { authService } from './services/authService';
 import logo from './assets/logo.png';
 import Home from './pages/public/Home/Home';
 import Explore from './pages/public/Explore/Explore';
@@ -135,9 +135,9 @@ export default function App() {
 
   const checkSession = async () => {
     try {
-      const res = await apiRequest('auth', 'me');
-      if (res.success && res.user) {
-        setCurrentUser(res.user);
+      const user = await authService.getCurrentUser();
+      if (user) {
+        setCurrentUser(user);
         localStorage.setItem('tripzy_logged_in', 'true');
         sessionStorage.setItem('tripzy_session_active', 'true');
       } else {
@@ -163,7 +163,7 @@ export default function App() {
         } else {
           // User opened a new tab or restarted browser, clear old server session
           try {
-            await apiRequest('auth', 'logout', 'POST');
+            await authService.logout();
           } catch (err) {
             console.log('Error clearing session:', err.message);
           }
@@ -200,7 +200,7 @@ export default function App() {
 
   const performLogout = async () => {
     try {
-      await apiRequest('auth', 'logout', 'POST');
+      await authService.logout();
       localStorage.removeItem('tripzy_logged_in');
       sessionStorage.removeItem('tripzy_session_active');
       setCurrentUser(null);

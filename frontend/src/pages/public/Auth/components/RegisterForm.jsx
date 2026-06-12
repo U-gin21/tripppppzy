@@ -23,7 +23,9 @@ export default function RegisterForm({
   setAgreeToTerms,
   handleRegister,
   loading,
-  setIsLogin
+  setIsLogin,
+  profilePhoto,
+  setProfilePhoto
 }) {
   return (
     <form onSubmit={handleRegister}>
@@ -103,6 +105,8 @@ export default function RegisterForm({
             </span>
             <input
               type="text"
+              name="full_name"
+              autocomplete="name"
               className="form-control"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
@@ -121,6 +125,8 @@ export default function RegisterForm({
             </span>
             <input
               type="email"
+              name="email"
+              autocomplete="username"
               className="form-control"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -139,6 +145,8 @@ export default function RegisterForm({
             </span>
             <input
               type="password"
+              name="password"
+              autocomplete="new-password"
               className="form-control"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -157,6 +165,8 @@ export default function RegisterForm({
             </span>
             <input
               type="password"
+              name="confirm_password"
+              autocomplete="new-password"
               className="form-control"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
@@ -175,6 +185,8 @@ export default function RegisterForm({
             </span>
             <input
               type="date"
+              name="dob"
+              autocomplete="bday"
               className="form-control"
               value={dob}
               onChange={(e) => setDob(e.target.value)}
@@ -190,7 +202,7 @@ export default function RegisterForm({
             <span className="input-icon">
               <i className="bi bi-gender-ambiguous"></i>
             </span>
-            <select className="form-select" value={gender} onChange={(e) => setGender(e.target.value)} required>
+            <select className="form-select" name="gender" autocomplete="sex" value={gender} onChange={(e) => setGender(e.target.value)} required>
               <option value="">Select Gender</option>
               <option value="male">Male</option>
               <option value="female">Female</option>
@@ -207,6 +219,8 @@ export default function RegisterForm({
             </span>
             <input
               type="text"
+              name="nic_passport"
+              autocomplete="off"
               className="form-control"
               value={nicPassport}
               onChange={(e) => setNicPassport(e.target.value)}
@@ -225,11 +239,30 @@ export default function RegisterForm({
             </span>
             <input
               type="tel"
+              name="contact_no"
+              autocomplete="tel"
               className="form-control"
               value={contactNo}
               onChange={(e) => setContactNo(e.target.value)}
               required
               placeholder="+94 XX XXX XXXX"
+            />
+          </div>
+        </div>
+
+        {/* Profile Photo */}
+        <div className="col-md-6">
+          <label className="form-label small fw-semibold text-secondary mb-2">Profile Photo (Optional)</label>
+          <div className="custom-input-group">
+            <span className="input-icon">
+              <i className="bi bi-image"></i>
+            </span>
+            <input
+              type="file"
+              name="profile_photo"
+              className="form-control"
+              accept="image/*"
+              onChange={(e) => setProfilePhoto(e.target.files[0] || null)}
             />
           </div>
         </div>

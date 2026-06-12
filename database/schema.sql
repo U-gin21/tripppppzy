@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS users (
     gender ENUM('male', 'female') NOT NULL,
     date_of_birth DATE NOT NULL,
     profile_photo VARCHAR(255) DEFAULT 'default_profile.jpg',
-    status ENUM('pending', 'active', 'rejected') DEFAULT 'active',
+    status ENUM('pending', 'active', 'rejected', 'suspended') DEFAULT 'active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

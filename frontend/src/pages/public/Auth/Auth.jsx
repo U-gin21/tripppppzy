@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { apiRequest } from '../../../api';
 import logo from '../../../assets/logo.png';
+import { authService } from '../../../services/authService';
+import './Auth.css';
 
 // Components
 import ForgotPasswordForm from './components/ForgotPasswordForm';
@@ -30,6 +31,7 @@ export default function Auth({ onLoginSuccess, initialMode = 'login' }) {
   const [gender, setGender] = useState('');
   const [dob, setDob] = useState('');
   const [agreeToTerms, setAgreeToTerms] = useState(false);
+  const [profilePhoto, setProfilePhoto] = useState(null);
 
   // Forgot / Reset Password State
   const [resetEmail, setResetEmail] = useState('');
@@ -66,10 +68,7 @@ export default function Auth({ onLoginSuccess, initialMode = 'login' }) {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await apiRequest('auth', 'login', 'POST', {
-        email: loginEmail,
-        password: loginPassword
-      });
+      const res = await authService.login(loginEmail, loginPassword);
       alert(res.message);
       setTimeout(() => {
         onLoginSuccess(res.user);
@@ -128,8 +127,11 @@ export default function Auth({ onLoginSuccess, initialMode = 'login' }) {
       formData.append('contact_no', contactNo);
       formData.append('gender', gender);
       formData.append('date_of_birth', dob);
+      if (profilePhoto) {
+        formData.append('profile_photo', profilePhoto);
+      }
 
-      const res = await apiRequest('auth', 'register', 'POST', formData);
+      const res = await authService.register(formData);
       alert(res.message + ' Please log in now.');
       setTimeout(() => {
         setIsLogin(true);
@@ -145,7 +147,7 @@ export default function Auth({ onLoginSuccess, initialMode = 'login' }) {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await apiRequest('auth', 'forgot_password', 'POST', { email: resetEmail });
+      const res = await authService.forgotPassword(resetEmail);
       alert(res.message);
       setVerifyMode(true);
       setForgotMode(false);
@@ -163,7 +165,7 @@ export default function Auth({ onLoginSuccess, initialMode = 'login' }) {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await apiRequest('auth', 'verify_reset_token', 'POST', { token: resetToken });
+      const res = await authService.verifyResetToken(resetToken);
       alert(res.message);
       setVerifyMode(false);
       setResetMode(true);
@@ -183,9 +185,7 @@ export default function Auth({ onLoginSuccess, initialMode = 'login' }) {
       if (!otpVerified) {
         throw new Error('Please verify your OTP before resetting your password.');
       }
-      const res = await apiRequest('auth', 'reset_password', 'POST', {
-        password: newPassword
-      });
+      const res = await authService.resetPassword(newPassword);
       alert(res.message);
       setTimeout(() => {
         setResetMode(false);
@@ -284,6 +284,8 @@ export default function Auth({ onLoginSuccess, initialMode = 'login' }) {
                   handleRegister={handleRegister}
                   loading={loading}
                   setIsLogin={setIsLogin}
+                  profilePhoto={profilePhoto}
+                  setProfilePhoto={setProfilePhoto}
                 />
               )}
 
