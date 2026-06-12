@@ -14,12 +14,12 @@ export default function BookServiceModal({
   return (
     <div className="modal fade" id="bookServiceModal" tabIndex="-1" aria-hidden="true">
       <div className="modal-dialog modal-dialog-centered">
-        <div className="modal-content rounded-4 border-0">
-          <div className="modal-header border-0 pb-0">
-            <h4 className="modal-title fw-bold text-gradient">Create Service Booking Request</h4>
-            <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          {selectedService && (
+        {selectedService && (
+          <div className="modal-content rounded-4 border-0">
+            <div className="modal-header border-0 pb-0">
+              <h4 className="modal-title fw-bold text-gradient">Create Service Booking Request</h4>
+              <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
             <form onSubmit={handleCreateBooking}>
               <div className="modal-body p-4">
                 <div className="bg-light p-3 rounded-3 mb-3">
@@ -77,8 +77,8 @@ export default function BookServiceModal({
                 </button>
               </div>
             </form>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
