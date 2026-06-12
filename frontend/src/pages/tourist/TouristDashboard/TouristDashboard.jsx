@@ -240,6 +240,14 @@ export default function TouristDashboard({
     } catch (err) {
       console.error(`Error hiding modal ${modalId}:`, err);
     }
+    // Force backdrop cleanup to prevent black screen overlay
+    setTimeout(() => {
+      const backdrops = document.querySelectorAll('.modal-backdrop');
+      backdrops.forEach(el => el.remove());
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+    }, 100);
   };
 
   const handleSendCompanionRequest = async (e) => {
@@ -315,8 +323,8 @@ export default function TouristDashboard({
       setStartDate('');
       setEndDate('');
       setBookingDetails('');
-      setSelectedService(null);
       safeHideModal('bookServiceModal');
+      setSelectedService(null);
       fetchBookings();
     } catch (err) {
       alert(err.message);
@@ -336,8 +344,8 @@ export default function TouristDashboard({
       alert("Review submitted successfully! Thank you for your feedback.");
       setComment('');
       setRating(5);
-      setReviewServiceId(null);
       safeHideModal('addReviewModal');
+      setReviewServiceId(null);
     } catch (err) {
       alert(err.message);
     }

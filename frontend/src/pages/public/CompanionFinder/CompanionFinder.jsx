@@ -115,6 +115,14 @@ export default function CompanionFinder({ currentUser, onNavigate }) {
     } catch (err) {
       console.error(`Error hiding modal ${modalId}:`, err);
     }
+    // Force backdrop cleanup to prevent black screen overlay
+    setTimeout(() => {
+      const backdrops = document.querySelectorAll('.modal-backdrop');
+      backdrops.forEach(el => el.remove());
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+    }, 100);
   };
 
   const handleCreatePost = async (e) => {
