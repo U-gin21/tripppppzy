@@ -12,10 +12,10 @@ export default function AuthFooter({ logo }) {
           </div>
           <div className="col-md-4 text-center">
             <div className="d-flex justify-content-center gap-3">
-              <a href="#" className="text-muted text-decoration-none small hover-text-primary">Privacy Policy</a>
-              <a href="#" className="text-muted text-decoration-none small hover-text-primary">Terms of Service</a>
-              <a href="#" className="text-muted text-decoration-none small hover-text-primary">Cookie Policy</a>
-              <a href="#" className="text-muted text-decoration-none small hover-text-primary">Support</a>
+              <a href="#" className="text-muted text-decoration-none small hover-text-primary" data-bs-toggle="modal" data-bs-target="#tripzyPrivacyModal">Privacy Policy</a>
+              <a href="#" className="text-muted text-decoration-none small hover-text-primary" data-bs-toggle="modal" data-bs-target="#tripzyTermsModal">Terms of Service</a>
+              <a href="#" className="text-muted text-decoration-none small hover-text-primary" data-bs-toggle="modal" data-bs-target="#tripzyPrivacyModal">Cookie Policy</a>
+              <a href="#" className="text-muted text-decoration-none small hover-text-primary" onClick={(e) => { e.preventDefault(); alert("For support, please contact us at support@tripzy.lk"); }}>Support</a>
             </div>
           </div>
           <div className="col-md-3 text-center text-md-end">

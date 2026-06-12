@@ -14,6 +14,8 @@ import AdminDashboard from './pages/admin/AdminDashboard/AdminDashboard';
 import Navbar from './components/common/Navbar';
 import ToastSystem from './components/common/ToastSystem';
 import CustomModal from './components/common/CustomModal';
+import TermsAndPrivacyModals from './components/common/TermsAndPrivacyModals';
+import Footer from './components/common/Footer';
 
 export default function App() {
   const [page, setPage] = useState('home');
@@ -248,7 +250,7 @@ export default function App() {
         {page === 'explore' && <Explore />}
         {page === 'companions' && <CompanionFinder currentUser={currentUser} onNavigate={navigate} />}
         {page === 'about' && <AboutUs />}
-        {page === 'faqs' && <FAQs />}
+        {page === 'faqs' && <FAQs currentUser={currentUser} onNavigate={navigate} />}
         {page === 'contact' && <ContactUs />}
         {page === 'auth' && (
           <Auth
@@ -298,6 +300,9 @@ export default function App() {
         )}
       </main>
 
+      {/* GLOBAL FOOTER */}
+      {page !== 'dashboard' && <Footer onNavigate={navigate} />}
+
       {/* GLOBAL TOAST SYSTEM */}
       <ToastSystem
         toasts={toasts}
@@ -306,6 +311,9 @@ export default function App() {
 
       {/* CUSTOM UNIFIED MODAL (ALERT & CONFIRM) */}
       <CustomModal modalState={modalState} />
+
+      {/* GLOBAL TERMS & PRIVACY MODALS */}
+      <TermsAndPrivacyModals />
 
     </div>
   );

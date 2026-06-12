@@ -4,6 +4,7 @@ import waterfall from '../../../assets/waterfall.png';
 import beach from '../../../assets/beach.png';
 import sigiriya from '../../../assets/sigiriya.png';
 import guidImg from '../../../assets/guid.jpeg';
+import { apiRequest, getUploadUrl } from '../../../api';
 import './Home.css';
 
 const slides = [
@@ -29,12 +30,27 @@ const slides = [
 
 export default function Home({ onNavigate, currentUser }) {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [reviews, setReviews] = useState([]);
 
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
     }, 7000);
     return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    async function fetchReviews() {
+      try {
+        const res = await apiRequest('services', 'all_reviews');
+        if (res.success && res.reviews) {
+          setReviews(res.reviews);
+        }
+      } catch (err) {
+        console.error("Failed to load reviews:", err);
+      }
+    }
+    fetchReviews();
   }, []);
 
   const servicesList = [
@@ -306,124 +322,96 @@ export default function Home({ onNavigate, currentUser }) {
           <p className="text-muted col-md-6 mx-auto">Real experiences from those who explored the wonder with us.</p>
         </div>
 
-        <div className="row g-4">
-          <div className="col-md-4">
-            <div className="testimonial-card h-100 d-flex flex-column justify-content-between">
-              <div>
-                <div className="text-warning mb-3">
-                  <i className="bi bi-star-fill text-success"></i>{' '}
-                  <i className="bi bi-star-fill text-success"></i>{' '}
-                  <i className="bi bi-star-fill text-success"></i>{' '}
-                  <i className="bi bi-star-fill text-success"></i>{' '}
-                  <i className="bi bi-star-fill text-success"></i>
+        {(() => {
+          const fallbackReviews = [
+            {
+              id: 'f1',
+              full_name: "Sarah Miller",
+              gender: "female",
+              rating: 5,
+              comment: "Tripzy made our honeymoon in Ella absolutely magical. The villa they recommended had the most breathtaking view of the Nine Arches Bridge!",
+              profile_photo: "default_profile.jpg",
+              name_of_institute: "Ella Cliff Resort",
+              service_type: "hotel"
+            },
+            {
+              id: 'f2',
+              full_name: "David Chen",
+              gender: "male",
+              rating: 5,
+              comment: "Professional from start to finish. The vehicle we rented was pristine and our driver knew all the best local spots for authentic Kottu!",
+              profile_photo: "default_profile.jpg",
+              name_of_institute: "Elite TukTuk & Car Rentals",
+              service_type: "vehicle"
+            },
+            {
+              id: 'f3',
+              full_name: "Elena Rodriguez",
+              gender: "female",
+              rating: 5,
+              comment: "Renting camping gear through Tripzy for our trek in Yala was so easy. High-quality equipment that kept us safe and comfortable.",
+              profile_photo: "default_profile.jpg",
+              name_of_institute: "WildCamp Safari Rentals",
+              service_type: "camping_tool"
+            }
+          ];
+          const displayReviews = reviews.length > 0 ? reviews : fallbackReviews;
+
+          return (
+            <div className="row g-4 justify-content-center">
+              {displayReviews.slice(0, 3).map((review) => (
+                <div className="col-lg-4 col-md-6" key={review.id || review.created_at}>
+                  <div className="testimonial-card h-100 d-flex flex-column justify-content-between">
+                    <div>
+                      <div className="text-warning mb-3">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <i 
+                            key={i} 
+                            className={`bi bi-star-fill ${i < review.rating ? 'text-warning' : 'text-muted opacity-25'}`}
+                            style={{ marginRight: '4px' }}
+                          ></i>
+                        ))}
+                      </div>
+                      <p className="text-muted italic" style={{ fontSize: '14.5px', lineHeight: '1.6' }}>"{review.comment}"</p>
+                      
+                      {review.name_of_institute && (
+                        <div className="mt-3 text-start">
+                          <span className="badge bg-light text-dark border small text-capitalize fw-semibold px-2.5 py-1.5" style={{ fontSize: '11px' }}>
+                            <i className={`bi ${
+                              review.service_type === 'hotel' ? 'bi-building' : 
+                              review.service_type === 'vehicle' ? 'bi-car-front-fill' : 
+                              review.service_type === 'guide' ? 'bi-compass-fill' : 'bi-backpack-fill'
+                            } me-1 text-primary`} style={{ fontSize: '12px' }}></i>
+                            {review.name_of_institute}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="d-flex align-items-center gap-3 mt-4 pt-3 border-top border-light-subtle">
+                      <img
+                        src={review.profile_photo && review.profile_photo !== 'default_profile.jpg' 
+                          ? getUploadUrl(review.profile_photo) 
+                          : (review.gender === 'female' 
+                              ? "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&q=80" 
+                              : "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100&q=80")}
+                        alt={review.full_name}
+                        className="rounded-circle border border-2 border-emerald"
+                        style={{ width: '48px', height: '48px', objectFit: 'cover' }}
+                      />
+                      <div>
+                        <h6 className="fw-bold mb-0 text-dark" style={{ fontSize: '15px' }}>{review.full_name}</h6>
+                        <span className="text-muted small" style={{ fontSize: '12px' }}>Verified Client</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <p className="text-muted italic">"Tripzy made our honeymoon in Ella absolutely magical. The villa they recommended had the most breathtaking view of the Nine Arches Bridge!"</p>
-              </div>
-              <div className="d-flex align-items-center gap-3 mt-3">
-                <img
-                  src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&q=80"
-                  alt="Sarah Miller"
-                  className="rounded-circle border border-2 border-emerald"
-                  style={{ width: '45px', height: '45px', objectFit: 'cover' }}
-                />
-                <div>
-                  <h6 className="fw-bold mb-0">Sarah Miller</h6>
-                  <span className="text-muted small text-secondary">London, UK</span>
-                </div>
-              </div>
+              ))}
             </div>
-          </div>
-          <div className="col-md-4">
-            <div className="testimonial-card h-100 d-flex flex-column justify-content-between">
-              <div>
-                <div className="text-warning mb-3">
-                  <i className="bi bi-star-fill text-success"></i>{' '}
-                  <i className="bi bi-star-fill text-success"></i>{' '}
-                  <i className="bi bi-star-fill text-success"></i>{' '}
-                  <i className="bi bi-star-fill text-success"></i>{' '}
-                  <i className="bi bi-star-fill text-success"></i>
-                </div>
-                <p className="text-muted italic">"Professional from start to finish. The vehicle we rented was pristine and our driver knew all the best local spots for authentic Kottu!"</p>
-              </div>
-              <div className="d-flex align-items-center gap-3 mt-3">
-                <img
-                  src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100&q=80"
-                  alt="David Chen"
-                  className="rounded-circle border border-2 border-emerald"
-                  style={{ width: '45px', height: '45px', objectFit: 'cover' }}
-                />
-                <div>
-                  <h6 className="fw-bold mb-0">David Chen</h6>
-                  <span className="text-muted small text-secondary">Singapore</span>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="col-md-4">
-            <div className="testimonial-card h-100 d-flex flex-column justify-content-between">
-              <div>
-                <div className="text-warning mb-3">
-                  <i className="bi bi-star-fill text-success"></i>{' '}
-                  <i className="bi bi-star-fill text-success"></i>{' '}
-                  <i className="bi bi-star-fill text-success"></i>{' '}
-                  <i className="bi bi-star-fill text-success"></i>{' '}
-                  <i className="bi bi-star-fill text-success"></i>
-                </div>
-                <p className="text-muted italic">"Renting camping gear through Tripzy for our trek in Yala was so easy. High-quality equipment that kept us safe and comfortable."</p>
-              </div>
-              <div className="d-flex align-items-center gap-3 mt-3">
-                <img
-                  src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80"
-                  alt="Elena Rodriguez"
-                  className="rounded-circle border border-2 border-emerald"
-                  style={{ width: '45px', height: '45px', objectFit: 'cover' }}
-                />
-                <div>
-                  <h6 className="fw-bold mb-0">Elena Rodriguez</h6>
-                  <span className="text-muted small text-secondary">Madrid, Spain</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+          );
+        })()}
       </section>
 
-      {/* FOOTER */}
-      <footer className="bg-dark text-white pt-5 pb-3">
-        <div className="container">
-          <div className="row g-4 mb-4">
-            <div className="col-lg-4">
-              <div className="d-flex align-items-center gap-2 mb-2">
-                <img src={logo} alt="Tripzy Logo" style={{ height: '40px', width: 'auto' }} />
-                <h4 className="fw-bold text-gradient mb-0">Tripzy Sri Lanka</h4>
-              </div>
-              <p className="text-muted small mt-2">
-                A centralized digital tourism management and booking ecosystem designed to boost local entrepreneurship and traveler safety in Sri Lanka.
-              </p>
-            </div>
-            <div className="col-md-4 col-lg-3 offset-lg-1">
-              <h6 className="fw-bold text-white mb-3">Quick Navigation</h6>
-              <ul className="list-unstyled d-flex flex-column gap-2 text-muted small">
-                <li><a href="#" className="text-muted text-decoration-none" onClick={(e) => { e.preventDefault(); onNavigate('home'); }}>Home</a></li>
-                <li><a href="#" className="text-muted text-decoration-none" onClick={(e) => { e.preventDefault(); onNavigate('explore'); }}>Explore Destinations</a></li>
-                <li><a href="#" className="text-muted text-decoration-none" onClick={(e) => { e.preventDefault(); onNavigate('companions'); }}>Companion Finder</a></li>
-                <li><a href="#" className="text-muted text-decoration-none" onClick={(e) => { e.preventDefault(); onNavigate('faqs'); }}>FAQs</a></li>
-              </ul>
-            </div>
-            <div className="col-md-4 col-lg-4">
-              <h6 className="fw-bold text-white mb-3">Newsletter</h6>
-              <p className="text-muted small">Subscribe to get notifications on seasonal Sri Lankan festivals and hotel promotions.</p>
-              <div className="input-group">
-                <input type="email" className="form-control" placeholder="Email Address" />
-                <button className="btn btn-gradient btn-sm">Subscribe</button>
-              </div>
-            </div>
-          </div>
-          <div className="border-top border-secondary pt-3 text-center text-muted small">
-            <p className="mb-0">&copy; {new Date().getFullYear()} Tripzy Sri Lanka (Smart Tourism System). All Rights Reserved.</p>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }

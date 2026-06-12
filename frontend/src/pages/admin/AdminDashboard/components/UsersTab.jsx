@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import { getUploadUrl } from '../../../../api';
 
-export default function UsersTab({ users, handleToggleUserStatus }) {
+export default function UsersTab({ users, handleToggleUserStatus, onViewUserSummary }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [selectedUser, setSelectedUser] = useState(null);
 
   // Filter users based on query, role, and status
   const filteredUsers = users.filter((user) => {
@@ -64,6 +63,7 @@ export default function UsersTab({ users, handleToggleUserStatus }) {
             <option value="all">All Roles</option>
             <option value="tourist">Tourists</option>
             <option value="provider">Service Providers</option>
+            <option value="admin">Administrators</option>
           </select>
         </div>
 
@@ -104,21 +104,21 @@ export default function UsersTab({ users, handleToggleUserStatus }) {
                   <td>
                     <div className="d-flex align-items-center gap-3">
                       <img
-                        src={getUploadUrl(user.profile_photo) || 'default_profile.jpg'}
+                        src={user.profile_photo && user.profile_photo !== 'default_profile.jpg' ? getUploadUrl(user.profile_photo) : 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80'}
                         alt={user.full_name}
                         className="rounded-circle shadow-sm"
                         style={{ width: '40px', height: '40px', objectFit: 'cover', border: '2px solid rgba(0,0,0,0.05)', cursor: 'pointer' }}
                         data-bs-toggle="modal"
-                        data-bs-target="#adminUserDetailModal"
-                        onClick={() => setSelectedUser(user)}
+                        data-bs-target="#adminUserSummaryModal"
+                        onClick={() => onViewUserSummary(user)}
                       />
                       <div>
                         <h6 
                           className="fw-bold mb-0 text-dark text-gradient-hover text-decoration-none"
                           style={{ cursor: 'pointer' }}
                           data-bs-toggle="modal"
-                          data-bs-target="#adminUserDetailModal"
-                          onClick={() => setSelectedUser(user)}
+                          data-bs-target="#adminUserSummaryModal"
+                          onClick={() => onViewUserSummary(user)}
                         >
                           {user.full_name}
                         </h6>
@@ -130,6 +130,10 @@ export default function UsersTab({ users, handleToggleUserStatus }) {
                     {user.user_type === 'tourist' ? (
                       <span className="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3 py-1 fw-bold text-uppercase" style={{ fontSize: '10px' }}>
                         Tourist
+                      </span>
+                    ) : user.user_type === 'admin' ? (
+                      <span className="badge bg-danger bg-opacity-10 text-danger rounded-pill px-3 py-1 fw-bold text-uppercase" style={{ fontSize: '10px' }}>
+                        Admin
                       </span>
                     ) : (
                       <span className="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-1 fw-bold text-uppercase" style={{ fontSize: '10px' }}>
@@ -197,78 +201,6 @@ export default function UsersTab({ users, handleToggleUserStatus }) {
             <p className="mt-3 text-muted">No registered users found matching the filter criteria.</p>
           </div>
         )}
-      </div>
-
-      {/* User Detail Summary Modal */}
-      <div className="modal fade" id="adminUserDetailModal" tabIndex="-1" aria-hidden="true">
-        <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content rounded-4 border-0">
-            <div className="modal-header border-0 pb-0">
-              <h4 className="modal-title fw-bold text-gradient">User Profile Summary</h4>
-              <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div className="modal-body p-4 text-center">
-              {selectedUser ? (
-                <>
-                  <img
-                    src={getUploadUrl(selectedUser.profile_photo) || 'default_profile.jpg'}
-                    alt={selectedUser.full_name}
-                    className="rounded-circle mb-3 shadow-sm"
-                    style={{ width: '100px', height: '100px', objectFit: 'cover', border: '3px solid var(--primary-color)' }}
-                  />
-                  <h4 className="fw-bold text-dark mb-1">{selectedUser.full_name}</h4>
-                  <span className="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3 py-1 fw-bold text-uppercase mb-4" style={{ fontSize: '11px' }}>
-                    {selectedUser.user_type}
-                  </span>
-
-                  <div className="text-start bg-light p-3 rounded-3 mb-0">
-                    <div className="row g-2 text-dark">
-                      <div className="col-6 mb-2">
-                        <span className="small text-muted d-block">Name with Initial:</span>
-                        <strong className="small">{selectedUser.name_with_initial || 'N/A'}</strong>
-                      </div>
-                      <div className="col-6 mb-2">
-                        <span className="small text-muted d-block">Email Address:</span>
-                        <strong className="small" style={{ wordBreak: 'break-all' }}>{selectedUser.email}</strong>
-                      </div>
-                      <div className="col-6 mb-2">
-                        <span className="small text-muted d-block">NIC / Passport:</span>
-                        <strong className="small">{selectedUser.nic_passport}</strong>
-                      </div>
-                      <div className="col-6 mb-2">
-                        <span className="small text-muted d-block">Contact No:</span>
-                        <strong className="small">{selectedUser.contact_no}</strong>
-                      </div>
-                      <div className="col-6 mb-2">
-                        <span className="small text-muted d-block">Gender:</span>
-                        <strong className="small text-capitalize">{selectedUser.gender}</strong>
-                      </div>
-                      <div className="col-6 mb-2">
-                        <span className="small text-muted d-block">Date of Birth:</span>
-                        <strong className="small">{selectedUser.date_of_birth}</strong>
-                      </div>
-                      <div className="col-6">
-                        <span className="small text-muted d-block">Status:</span>
-                        <strong className="small text-capitalize">{selectedUser.status}</strong>
-                      </div>
-                      <div className="col-6">
-                        <span className="small text-muted d-block">Registration Date:</span>
-                        <strong className="small">{new Date(selectedUser.created_at).toLocaleDateString()}</strong>
-                      </div>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <p className="text-muted">Loading user profile summary...</p>
-              )}
-            </div>
-            <div className="modal-footer border-0 pt-0">
-              <button type="button" className="btn btn-gradient rounded-pill px-4 w-100" data-bs-dismiss="modal">
-                Close Summary
-              </button>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );

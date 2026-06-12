@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { apiRequest } from '../../../api';
+import { providerApi } from './providerApi';
 
 // Components
 import Sidebar from './components/Sidebar';
@@ -8,6 +8,7 @@ import AddServiceTab from './components/AddServiceTab';
 import ProfileTab from './components/ProfileTab';
 import BookingsTab from './components/BookingsTab';
 import CustomerDetailsModal from './components/CustomerDetailsModal';
+import NotificationsTab from '../../../components/common/NotificationsTab';
 
 export default function ProviderDashboard({ 
   currentUser, 
@@ -19,6 +20,7 @@ export default function ProviderDashboard({
 }) {
   const [listings, setListings] = useState([]);
   const [bookings, setBookings] = useState([]);
+  const [notifications, setNotifications] = useState([]);
 
   // Selected Booking Customer Details Modal
   const [selectedCust, setSelectedCust] = useState(null);
@@ -26,12 +28,13 @@ export default function ProviderDashboard({
   useEffect(() => {
     fetchListings();
     fetchBookings();
+    fetchNotifications();
   }, []);
 
   const fetchListings = async () => {
     try {
-      const res = await apiRequest('services', 'provider_list');
-      setListings(res.services || []);
+      const listings = await providerApi.fetchListings();
+      setListings(listings);
     } catch (err) {
       console.error(err);
     }
@@ -39,10 +42,19 @@ export default function ProviderDashboard({
 
   const fetchBookings = async () => {
     try {
-      const res = await apiRequest('bookings', 'provider_list');
-      setBookings(res.bookings || []);
+      const bookings = await providerApi.fetchBookings();
+      setBookings(bookings);
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const fetchNotifications = async () => {
+    try {
+      const notifications = await providerApi.fetchNotifications();
+      setNotifications(notifications);
+    } catch (err) {
+      console.error("Failed to fetch notifications:", err);
     }
   };
 
@@ -54,6 +66,8 @@ export default function ProviderDashboard({
         activeTab={activeTab} 
         setActiveTab={setActiveTab} 
         onLogout={onLogout} 
+        unreadNotificationsCount={notifications.filter(n => !n.is_read || n.is_read == '0').length}
+        pendingBookingsCount={bookings.filter(b => b.status === 'pending').length}
       />
 
       {/* CONTENT REGION */}
@@ -88,6 +102,13 @@ export default function ProviderDashboard({
             bookings={bookings} 
             setSelectedCust={setSelectedCust} 
             fetchBookings={fetchBookings} 
+          />
+        )}
+
+        {activeTab === 'notifications' && (
+          <NotificationsTab 
+            notifications={notifications} 
+            onRefresh={fetchNotifications}
           />
         )}
       </div>

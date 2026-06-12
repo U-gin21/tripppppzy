@@ -1,7 +1,15 @@
 import React from 'react';
 import { getUploadUrl } from '../../../../api';
 
-export default function Sidebar({ currentUser, activeTab, setActiveTab, onLogout }) {
+export default function Sidebar({ 
+  currentUser, 
+  activeTab, 
+  setActiveTab, 
+  onLogout,
+  unreadNotificationsCount,
+  pendingApprovalsCount,
+  pendingFaqsCount
+}) {
   return (
     <div className="sidebar">
       <div className="sidebar-brand">
@@ -30,6 +38,9 @@ export default function Sidebar({ currentUser, activeTab, setActiveTab, onLogout
         <li className={`sidebar-item ${activeTab === 'approvals' ? 'active' : ''}`}>
           <a href="#" onClick={(e) => { e.preventDefault(); setActiveTab('approvals'); }}>
             <i className="bi bi-check2-all"></i> Pending Approvals
+            {pendingApprovalsCount > 0 && (
+              <span className="badge bg-warning text-dark rounded-pill ms-2" style={{ padding: '3px 6px' }}>{pendingApprovalsCount}</span>
+            )}
           </a>
         </li>
         <li className={`sidebar-item ${activeTab === 'destinations' ? 'active' : ''}`}>
@@ -40,6 +51,9 @@ export default function Sidebar({ currentUser, activeTab, setActiveTab, onLogout
         <li className={`sidebar-item ${activeTab === 'faqs' ? 'active' : ''}`}>
           <a href="#" onClick={(e) => { e.preventDefault(); setActiveTab('faqs'); }}>
             <i className="bi bi-question-circle"></i> FAQs Manage
+            {pendingFaqsCount > 0 && (
+              <span className="badge bg-warning text-dark rounded-pill ms-2" style={{ padding: '3px 6px' }}>{pendingFaqsCount}</span>
+            )}
           </a>
         </li>
         <li className={`sidebar-item ${activeTab === 'profile' ? 'active' : ''}`}>
@@ -55,6 +69,14 @@ export default function Sidebar({ currentUser, activeTab, setActiveTab, onLogout
         <li className={`sidebar-item ${activeTab === 'users' ? 'active' : ''}`}>
           <a href="#" onClick={(e) => { e.preventDefault(); setActiveTab('users'); }}>
             <i className="bi bi-people-fill"></i> Manage Users
+          </a>
+        </li>
+        <li className={`sidebar-item ${activeTab === 'notifications' ? 'active' : ''}`}>
+          <a href="#" onClick={(e) => { e.preventDefault(); setActiveTab('notifications'); }}>
+            <i className="bi bi-bell-fill"></i> Notifications
+            {unreadNotificationsCount > 0 && (
+              <span className="badge bg-danger rounded-pill ms-2" style={{ padding: '3px 6px' }}>{unreadNotificationsCount}</span>
+            )}
           </a>
         </li>
         <li className="sidebar-item mt-4 border-top pt-3">

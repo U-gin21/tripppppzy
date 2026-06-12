@@ -156,12 +156,14 @@ body {
 /* Dashboard Sidebars */
 .dashboard-container {
   display: flex;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   background-color: #f1f5f9;
 }
 
 .sidebar {
   width: 280px;
+  height: 100%;
   background: var(--grad-dark);
   color: #f8fafc;
   padding: 28px 24px;
@@ -170,6 +172,7 @@ body {
   border-radius: 0 32px 32px 0;
   box-shadow: 8px 0 30px rgba(2, 44, 34, 0.12);
   z-index: 10;
+  overflow-y: auto;
 }
 
 .sidebar-brand {
@@ -214,6 +217,7 @@ body {
 
 .dashboard-content {
   flex: 1;
+  height: 100%;
   padding: 40px;
   overflow-y: auto;
 }

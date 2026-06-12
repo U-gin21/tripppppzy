@@ -280,7 +280,7 @@ export default function RegisterForm({
           style={{ cursor: 'pointer' }}
         />
         <label className="form-check-label small text-muted" htmlFor="termsCheck" style={{ cursor: 'pointer', userSelect: 'none' }}>
-          I agree to the <a href="#" className="text-decoration-none text-primary hover-text-primary fw-semibold">Terms of Service</a> and <a href="#" className="text-decoration-none text-primary hover-text-primary fw-semibold">Privacy Policy</a> of Tripzy Sri Lanka.
+          I agree to the <a href="#" className="text-decoration-none text-primary hover-text-primary fw-semibold" data-bs-toggle="modal" data-bs-target="#tripzyTermsModal">Terms of Service</a> and <a href="#" className="text-decoration-none text-primary hover-text-primary fw-semibold" data-bs-toggle="modal" data-bs-target="#tripzyPrivacyModal">Privacy Policy</a> of Tripzy Sri Lanka.
         </label>
       </div>
 

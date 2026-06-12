@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { apiRequest } from '../../../api';
+import { touristApi } from './touristApi';
 import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
 
@@ -8,7 +8,7 @@ import Sidebar from './components/Sidebar';
 import BookingsTab from './components/BookingsTab';
 import BookServicesTab from './components/BookServicesTab';
 import CompanionTab from './components/CompanionTab';
-import NotificationsTab from './components/NotificationsTab';
+import NotificationsTab from '../../../components/common/NotificationsTab';
 import ProfileTab from './components/ProfileTab';
 import BookServiceModal from './components/BookServiceModal';
 import ReviewModal from './components/ReviewModal';
@@ -96,8 +96,8 @@ export default function TouristDashboard({
 
   const fetchServiceBookings = async (serviceId) => {
     try {
-      const res = await apiRequest('bookings', 'service_bookings', 'GET', { service_id: serviceId });
-      setServiceBookings(res.bookings || []);
+      const bookings = await touristApi.fetchServiceBookings(serviceId);
+      setServiceBookings(bookings);
     } catch (err) {
       console.error(err);
     }
@@ -192,8 +192,8 @@ export default function TouristDashboard({
 
   const fetchBookings = async () => {
     try {
-      const res = await apiRequest('bookings', 'tourist_list');
-      setBookings(res.bookings || []);
+      const bookings = await touristApi.fetchBookings();
+      setBookings(bookings);
     } catch (err) {
       console.error(err);
     }
@@ -201,8 +201,8 @@ export default function TouristDashboard({
 
   const fetchServices = async () => {
     try {
-      const res = await apiRequest('services', 'list', 'GET', { type: serviceTypeFilter });
-      setServices(res.services || []);
+      const services = await touristApi.fetchServices(serviceTypeFilter);
+      setServices(services);
     } catch (err) {
       console.error(err);
     }
@@ -216,14 +216,11 @@ export default function TouristDashboard({
 
   const fetchCompanionDetails = async () => {
     try {
-      const sharedPostsRes = await apiRequest('companions', 'list_posts', 'GET');
-      setCompanionPosts(sharedPostsRes.posts || []);
-      const postRes = await apiRequest('companions', 'my_posts');
-      setMyPosts(postRes.posts || []);
-      const reqRes = await apiRequest('companions', 'my_requests');
-      setMyRequests(reqRes.requests || []);
-      const incomingRes = await apiRequest('companions', 'incoming_requests');
-      setIncomingRequests(incomingRes.requests || []);
+      const data = await touristApi.fetchCompanionDetails();
+      setCompanionPosts(data.companionPosts);
+      setMyPosts(data.myPosts);
+      setMyRequests(data.myRequests);
+      setIncomingRequests(data.incomingRequests);
     } catch (err) {
       console.error(err);
     }
@@ -257,10 +254,7 @@ export default function TouristDashboard({
     }
     setRequestSubmitting(true);
     try {
-      await apiRequest('companions', 'send_request', 'POST', {
-        post_id: requestPost.id,
-        message: requestMsg
-      });
+      await touristApi.sendCompanionRequest(requestPost.id, requestMsg);
       alert('Join request sent successfully! The host will be notified.');
       setRequestMsg('');
       setRequestPost(null);
@@ -274,10 +268,12 @@ export default function TouristDashboard({
   };
 
   const fetchNotifications = async () => {
-    setNotifications([
-      { id: 1, message: "Welcome to Tripzy! Explore destinations to plan your tour.", date: "Just now" },
-      { id: 2, message: "Always pay physically to the provider upon arrival. Tripzy uses offline payment.", date: "1 hour ago" }
-    ]);
+    try {
+      const notifications = await touristApi.fetchNotifications();
+      setNotifications(notifications);
+    } catch (err) {
+      console.error("Failed to fetch notifications:", err);
+    }
   };
 
   const isDateOverlapping = (start, end) => {
@@ -312,13 +308,13 @@ export default function TouristDashboard({
 
     setBookingSubmitting(true);
     try {
-      const res = await apiRequest('bookings', 'create', 'POST', {
-        service_id: selectedService.id,
-        service_type: selectedService.service_type,
-        start_date: startDate,
-        end_date: endDate,
-        booking_details: bookingDetails
-      });
+      const res = await touristApi.createBooking(
+        selectedService.id,
+        selectedService.service_type,
+        startDate,
+        endDate,
+        bookingDetails
+      );
       alert(res.message);
       setStartDate('');
       setEndDate('');
@@ -336,11 +332,7 @@ export default function TouristDashboard({
   const handleReviewSubmit = async (e) => {
     e.preventDefault();
     try {
-      await apiRequest('services', 'add_review', 'POST', {
-        service_id: reviewServiceId,
-        rating,
-        comment
-      });
+      await touristApi.addReview(reviewServiceId, rating, comment);
       alert("Review submitted successfully! Thank you for your feedback.");
       setComment('');
       setRating(5);
@@ -355,7 +347,7 @@ export default function TouristDashboard({
     e.preventDefault();
     setPostSubmitting(true);
     try {
-      await apiRequest('companions', 'create_post', 'POST', {
+      await touristApi.createCompanionPost({
         destination_place: postDest,
         start_date: postStartDate,
         end_date: postEndDate,
@@ -385,10 +377,7 @@ export default function TouristDashboard({
 
   const handleApproveRequest = async (requestId) => {
     try {
-      await apiRequest('companions', 'update_request', 'POST', {
-        request_id: requestId,
-        status: 'accepted'
-      });
+      await touristApi.updateCompanionRequest(requestId, 'accepted');
       alert("Request accepted! Contact details have been shared via email.");
       fetchCompanionDetails();
     } catch (err) {
@@ -398,10 +387,7 @@ export default function TouristDashboard({
 
   const handleRejectRequest = async (requestId) => {
     try {
-      await apiRequest('companions', 'update_request', 'POST', {
-        request_id: requestId,
-        status: 'rejected'
-      });
+      await touristApi.updateCompanionRequest(requestId, 'rejected');
       alert("Request rejected.");
       fetchCompanionDetails();
     } catch (err) {
@@ -414,7 +400,7 @@ export default function TouristDashboard({
       "Are you sure you want to delete this companion post? This action cannot be undone.",
       async () => {
         try {
-          await apiRequest('companions', 'delete_post', 'POST', { post_id: postId });
+          await touristApi.deleteCompanionPost(postId);
           alert("Companion post deleted successfully.");
           fetchCompanionDetails();
         } catch (err) {
@@ -430,7 +416,7 @@ export default function TouristDashboard({
       "Close this companion search? You will no longer accept new requests.",
       async () => {
         try {
-          await apiRequest('companions', 'close_post', 'POST', { post_id: postId });
+          await touristApi.closeCompanionPost(postId);
           alert("Companion post closed. No more join requests accepted.");
           fetchCompanionDetails();
         } catch (err) {
@@ -446,7 +432,7 @@ export default function TouristDashboard({
       "Cancel this join request? You can send another request later.",
       async () => {
         try {
-          await apiRequest('companions', 'cancel_request', 'POST', { request_id: requestId });
+          await touristApi.cancelCompanionRequest(requestId);
           alert("Join request cancelled.");
           fetchCompanionDetails();
         } catch (err) {
@@ -465,6 +451,8 @@ export default function TouristDashboard({
         activeTab={activeTab} 
         setActiveTab={setActiveTab} 
         onLogout={onLogout} 
+        unreadNotificationsCount={notifications.filter(n => !n.is_read || n.is_read == '0').length}
+        pendingCompanionsCount={incomingRequests.filter(r => r.status === 'pending').length}
       />
 
       {/* DASHBOARD CONTENT */}
@@ -506,6 +494,7 @@ export default function TouristDashboard({
         {activeTab === 'notifications' && (
           <NotificationsTab 
             notifications={notifications} 
+            onRefresh={fetchNotifications}
           />
         )}
 

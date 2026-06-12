@@ -1,7 +1,14 @@
 import React from 'react';
 import { getUploadUrl } from '../../../../api';
 
-export default function Sidebar({ currentUser, activeTab, setActiveTab, onLogout }) {
+export default function Sidebar({ 
+  currentUser, 
+  activeTab, 
+  setActiveTab, 
+  onLogout,
+  unreadNotificationsCount,
+  pendingCompanionsCount
+}) {
   return (
     <div className="sidebar">
       <div className="sidebar-brand">
@@ -35,6 +42,9 @@ export default function Sidebar({ currentUser, activeTab, setActiveTab, onLogout
         <li className={`sidebar-item ${activeTab === 'companion' ? 'active' : ''}`}>
           <a href="#" onClick={(e) => { e.preventDefault(); setActiveTab('companion'); }}>
             <i className="bi bi-people"></i> My Companions
+            {pendingCompanionsCount > 0 && (
+              <span className="badge bg-warning text-dark rounded-pill ms-2" style={{ padding: '3px 6px' }}>{pendingCompanionsCount}</span>
+            )}
           </a>
         </li>
         <li className={`sidebar-item ${activeTab === 'profile' ? 'active' : ''}`}>
@@ -45,6 +55,9 @@ export default function Sidebar({ currentUser, activeTab, setActiveTab, onLogout
         <li className={`sidebar-item ${activeTab === 'notifications' ? 'active' : ''}`}>
           <a href="#" onClick={(e) => { e.preventDefault(); setActiveTab('notifications'); }}>
             <i className="bi bi-bell-fill"></i> Notifications
+            {unreadNotificationsCount > 0 && (
+              <span className="badge bg-danger rounded-pill ms-2" style={{ padding: '3px 6px' }}>{unreadNotificationsCount}</span>
+            )}
           </a>
         </li>
         <li className="sidebar-item mt-4 border-top pt-3">

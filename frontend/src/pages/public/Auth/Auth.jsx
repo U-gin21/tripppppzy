@@ -9,7 +9,6 @@ import VerifyOtpForm from './components/VerifyOtpForm';
 import ResetPasswordForm from './components/ResetPasswordForm';
 import LoginForm from './components/LoginForm';
 import RegisterForm from './components/RegisterForm';
-import AuthFooter from './components/AuthFooter';
 
 export default function Auth({ onLoginSuccess, initialMode = 'login' }) {
   const [isLogin, setIsLogin] = useState(true);
@@ -293,9 +292,6 @@ export default function Auth({ onLoginSuccess, initialMode = 'login' }) {
           </div>
         </div>
       </div>
-
-      {/* Auth Page Footer */}
-      <AuthFooter logo={logo} />
     </div>
   );
 }

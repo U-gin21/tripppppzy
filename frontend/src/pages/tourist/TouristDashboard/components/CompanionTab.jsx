@@ -1,4 +1,5 @@
 import React from 'react';
+import { getUploadUrl } from '../../../../api';
 
 export default function CompanionTab({ 
   currentUser, 
@@ -156,7 +157,7 @@ export default function CompanionTab({
                       <div className="mb-2">
                         <div className="d-flex gap-2 align-items-start mb-2">
                           <img 
-                            src={`https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80`} 
+                            src={req.requester_photo && req.requester_photo !== 'default_profile.jpg' ? getUploadUrl(req.requester_photo) : 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80'} 
                             alt={req.requester_name} 
                             className="rounded-circle" 
                             style={{ width: '32px', height: '32px', objectFit: 'cover' }}

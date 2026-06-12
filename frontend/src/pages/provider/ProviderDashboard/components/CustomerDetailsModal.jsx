@@ -1,4 +1,5 @@
 import React from 'react';
+import { getUploadUrl } from '../../../../api';
 
 export default function CustomerDetailsModal({ selectedCust }) {
   return (
@@ -13,7 +14,7 @@ export default function CustomerDetailsModal({ selectedCust }) {
             {selectedCust && (
               <div className="d-flex flex-column align-items-center text-center">
                 <img 
-                  src={`https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80`} 
+                  src={selectedCust.tourist_profile_photo && selectedCust.tourist_profile_photo !== 'default_profile.jpg' ? getUploadUrl(selectedCust.tourist_profile_photo) : 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80'} 
                   alt="Customer" 
                   className="rounded-circle mb-3 border-2 border-primary" 
                   style={{ width: '90px', height: '90px', objectFit: 'cover' }}

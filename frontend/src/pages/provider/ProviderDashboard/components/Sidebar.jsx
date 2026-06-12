@@ -1,7 +1,14 @@
 import React from 'react';
 import { getUploadUrl } from '../../../../api';
 
-export default function Sidebar({ currentUser, activeTab, setActiveTab, onLogout }) {
+export default function Sidebar({ 
+  currentUser, 
+  activeTab, 
+  setActiveTab, 
+  onLogout,
+  unreadNotificationsCount,
+  pendingBookingsCount
+}) {
   return (
     <div className="sidebar">
       <div className="sidebar-brand">
@@ -40,6 +47,17 @@ export default function Sidebar({ currentUser, activeTab, setActiveTab, onLogout
         <li className={`sidebar-item ${activeTab === 'bookings' ? 'active' : ''}`}>
           <a href="#" onClick={(e) => { e.preventDefault(); setActiveTab('bookings'); }}>
             <i className="bi bi-briefcase"></i> Incoming Bookings
+            {pendingBookingsCount > 0 && (
+              <span className="badge bg-warning text-dark rounded-pill ms-2" style={{ padding: '3px 6px' }}>{pendingBookingsCount}</span>
+            )}
+          </a>
+        </li>
+        <li className={`sidebar-item ${activeTab === 'notifications' ? 'active' : ''}`}>
+          <a href="#" onClick={(e) => { e.preventDefault(); setActiveTab('notifications'); }}>
+            <i className="bi bi-bell-fill"></i> Notifications
+            {unreadNotificationsCount > 0 && (
+              <span className="badge bg-danger rounded-pill ms-2" style={{ padding: '3px 6px' }}>{unreadNotificationsCount}</span>
+            )}
           </a>
         </li>
         <li className="sidebar-item mt-4 border-top pt-3">
