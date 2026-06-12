@@ -45,13 +45,10 @@ class Booking {
             throw new Exception("This service is already booked for the selected dates. Please choose a different date range.");
         }
 
-        // Calculate price based on duration
+        // Calculate price based on duration (inclusive of both start and end date)
         $start = new DateTime($data['start_date']);
         $end = new DateTime($data['end_date']);
-        $days = $start->diff($end)->days;
-        if ($days <= 0) {
-            $days = 1; // Minimum 1 day
-        }
+        $days = $start->diff($end)->days + 1;
         $total_price = $service['price'] * $days;
 
         $sql = "INSERT INTO bookings (tourist_id, service_id, ref_no, start_date, end_date, price, status, booking_details)
@@ -180,13 +177,10 @@ class Booking {
                 $stmtService->execute([$booking['service_id']]);
                 $serv = $stmtService->fetch();
                 
-                // Calculate days
+                // Calculate days (inclusive of both start and end date)
                 $start = new DateTime($booking['start_date']);
                 $end = new DateTime($booking['end_date']);
-                $days = $start->diff($end)->days;
-                if ($days <= 0) {
-                    $days = 1;
-                }
+                $days = $start->diff($end)->days + 1;
                 
                 $rate = $serv ? $serv['price'] : ($booking['price'] / $days);
 
