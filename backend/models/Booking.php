@@ -85,7 +85,8 @@ class Booking {
                 $body .= "<li><strong>Booking Ref No:</strong> " . $ref_no . "</li>";
                 $body .= "<li><strong>Service:</strong> " . ucfirst($data['service_type']) . " (" . htmlspecialchars($service['name_of_institute']) . ")</li>";
                 $body .= "<li><strong>Duration:</strong> " . $data['start_date'] . " to " . $data['end_date'] . " ($days day/s)</li>";
-                $body .= "<li><strong>Total Cost:</strong> LKR " . number_format($total_price, 2) . "</li>";
+                $body .= "<li><strong>Rate per Day:</strong> LKR " . number_format($service['price'], 2) . "</li>";
+                $body .= "<li><strong>Total Cost:</strong> LKR " . number_format($service['price'], 2) . " x " . $days . " day/s = LKR " . number_format($total_price, 2) . "</li>";
                 $body .= "<li><strong>Payment Mode:</strong> Offline (Pay on Arrival / Physical Payment to Provider)</li>";
                 $body .= "<li><strong>Status:</strong> PENDING CONFIRMATION</li>";
                 $body .= "</ul>";
@@ -99,8 +100,9 @@ class Booking {
                 $provider_body = "<h2>Hello Provider,</h2>";
                 $provider_body .= "<p>You have received a new booking request for your service: <strong>" . htmlspecialchars($service['name_of_institute']) . "</strong>.</p>";
                 $provider_body .= "<p><strong>Client:</strong> " . htmlspecialchars($tourist['full_name']) . " (" . htmlspecialchars($tourist['email']) . ")</p>";
-                $provider_body .= "<p><strong>Dates:</strong> " . $data['start_date'] . " to " . $data['end_date'] . "</p>";
-                $provider_body .= "<p><strong>Price:</strong> LKR " . number_format($total_price, 2) . "</p>";
+                $provider_body .= "<p><strong>Dates:</strong> " . $data['start_date'] . " to " . $data['end_date'] . " ($days day/s)</p>";
+                $provider_body .= "<p><strong>Rate per Day:</strong> LKR " . number_format($service['price'], 2) . "</p>";
+                $provider_body .= "<p><strong>Price:</strong> LKR " . number_format($service['price'], 2) . " x " . $days . " day/s = LKR " . number_format($total_price, 2) . "</p>";
                 $provider_body .= "<p>Please review and update the status in your Provider Dashboard.</p>";
                 
                 Mailer::send($service['email'], $provider_subject, $provider_body);
@@ -173,10 +175,35 @@ class Booking {
         if ($result) {
             $booking = $this->getById($id);
             if ($booking) {
+                // Fetch service details for rate
+                $stmtService = $this->db->prepare("SELECT price FROM services WHERE id = ?");
+                $stmtService->execute([$booking['service_id']]);
+                $serv = $stmtService->fetch();
+                
+                // Calculate days
+                $start = new DateTime($booking['start_date']);
+                $end = new DateTime($booking['end_date']);
+                $days = $start->diff($end)->days;
+                if ($days <= 0) {
+                    $days = 1;
+                }
+                
+                $rate = $serv ? $serv['price'] : ($booking['price'] / $days);
+
                 // Email status update to Tourist
                 $subject = "Tripzy Booking Status Updated - Ref: " . $booking['ref_no'];
                 $body = "<h2>Dear " . htmlspecialchars($booking['tourist_name']) . ",</h2>";
                 $body .= "<p>Your booking for <strong>" . htmlspecialchars($booking['name_of_institute']) . "</strong> (Ref: " . $booking['ref_no'] . ") has been marked as: <strong>" . strtoupper($status) . "</strong>.</p>";
+                
+                $body .= "<h3>Booking Details:</h3>";
+                $body .= "<ul>";
+                $body .= "<li><strong>Booking Ref No:</strong> " . $booking['ref_no'] . "</li>";
+                $body .= "<li><strong>Service:</strong> " . ucfirst($booking['service_type']) . " (" . htmlspecialchars($booking['name_of_institute']) . ")</li>";
+                $body .= "<li><strong>Duration:</strong> " . $booking['start_date'] . " to " . $booking['end_date'] . " ($days day/s)</li>";
+                $body .= "<li><strong>Rate per Day:</strong> LKR " . number_format($rate, 2) . "</li>";
+                $body .= "<li><strong>Total Cost:</strong> LKR " . number_format($rate, 2) . " x " . $days . " day/s = LKR " . number_format($booking['price'], 2) . "</li>";
+                $body .= "</ul>";
+
                 if ($status === 'completed') {
                     $body .= "<p>Thank you for completing your payment. Your booking is officially verified.</p>";
                 } else if ($status === 'rejected') {
